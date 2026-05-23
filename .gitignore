@@ -1,0 +1,17 @@
+.venv/
+cache/
+extras/
+
+# Datos reales del usuario (no subir al repo)
+inputs/OPERACIONES*.csv
+
+# Resto de CSV generados o personales
+*.csv
+!tabla_definitiva_irpf_*.csv
+
+# Ejemplos didácticos (sí van al repo)
+!inputs/ejemplos/
+!inputs/ejemplos/*.csv
+
+__pycache__/
+*.pyc

@@ -1,0 +1,4 @@
+"CurrencyPrimary","AssetClass","Symbol","DateTime","Quantity","TradePrice","Proceeds","IBCommission","Buy/Sell"
+"USD","STK","NVDA","15/03/2024,100000","100","100","-10000","-2","BUY"
+"USD","STK","NVDA","20/09/2024,110000","100","120","-12000","-2","BUY"
+"USD","STK","USDX","10/06/2024,150000","10","150","-1500","-1","BUY"
