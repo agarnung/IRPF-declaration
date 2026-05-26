@@ -2,6 +2,8 @@
 
 Genera **una tabla CSV definitiva** para la declaración de la Renta: **declarar compraventa** de acciones y ETFs en euros (tipos **BCE**), siguiendo **FIFO**, para casillas **0327 / 0328 / 0331** (_Las ganancias y pérdidas patrimoniales en la base del ahorro_).
 
+![](https://s3.elespanol.com/2026/05/22/actualidad/1003744256765_263093308_1024x576.jpg)
+
 ## Qué hace y qué no (por ahora)
 
 **Sí:** ganancia o pérdida por **compraventa de acciones** cerrada en el ejercicio (ventas en largo y cierres en corto).
