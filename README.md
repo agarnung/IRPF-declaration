@@ -2,7 +2,7 @@
 
 Genera **`tabla_definitiva_irpf_AAAA.csv`** para la Renta: acciones en euros (tipos **BCE**), **FIFO**, casillas **0327 / 0328 / 0331**.
 
-## Qué hace y qué no
+## Qué hace y qué no (por ahora)
 
 **Sí:** ganancia o pérdida por **compraventa de acciones** cerrada en el ejercicio (ventas en largo y cierres en corto).
 
