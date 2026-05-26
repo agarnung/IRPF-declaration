@@ -1,6 +1,6 @@
 # IRPF — Interactive Brokers
 
-Genera **`tabla_definitiva_irpf_AAAA.csv`** para la Renta: acciones en euros (tipos **BCE**), **FIFO**, casillas **0327 / 0328 / 0331**.
+Genera **una tabla CSV definitiva** para la declaración de la Renta: **declarar compraventa** de acciones y ETFs en euros (tipos **BCE**), siguiendo **FIFO**, para casillas **0327 / 0328 / 0331** (_Las ganancias y pérdidas patrimoniales en la base del ahorro_).
 
 ## Qué hace y qué no (por ahora)
 
@@ -8,7 +8,7 @@ Genera **`tabla_definitiva_irpf_AAAA.csv`** para la Renta: acciones en euros (ti
 
 **No:** dividendos, intereses, cambio de divisa (`CASH` / `EUR.USD`), posiciones abiertas a 31/12.
 
-Por eso la fila **TOTAL** del CSV **no tiene por qué coincidir** con «P&G realizadas» de IBKR (suelen incluir dividendos, otros tipos de cambio, etc.). Para Hacienda usa esta tabla; IBKR solo para comprobar que no falten operaciones en `inputs/`.
+> Nota: Por eso la fila **TOTAL** del CSV **no tiene por qué coincidir** con «P&G realizadas» de IBKR (suelen incluir dividendos, otros tipos de cambio, etc.). Para Hacienda se recomienda usar esta tabla; IBKR solo para comprobar que no falten operaciones.
 
 Más detalle: [docs/CONFORMIDAD_NORMATIVA.md](docs/CONFORMIDAD_NORMATIVA.md)
 
@@ -50,4 +50,4 @@ CSV con `;` y decimales con **punto**. Si `SUMA()` da 0, importa con *Datos → 
 
 ## TODO
 
-Ampliar el proyecto para incluir también **dividendos** (importes brutos y netos, **retenciones en el país de origen**, deducciones y el resto de casillas y trámites que exija la Renta por rendimientos del capital mobiliario), además de la compraventa de acciones que ya cubre el script.
+- Ampliar el proyecto para incluir también **dividendos** (importes brutos y netos, **retenciones en el país de origen**, deducciones y el resto de casillas y trámites que exija la Renta por rendimientos del capital mobiliario), además de la compraventa de acciones que ya cubre el script.
