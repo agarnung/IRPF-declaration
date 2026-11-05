@@ -15,3 +15,9 @@ inputs/OPERACIONES*.csv
 
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# Credenciales / API keys (PayPal sandbox, LLM) — NUNCA subir al repo
+.env
+.env.*
+!.env.example

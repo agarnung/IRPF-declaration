@@ -203,9 +203,28 @@ def escribir_informe_natural(
     return path
 
 
+def _cargar_dotenv_si_existe() -> None:
+    """Carga variables de entorno desde un .env local si existe python-dotenv
+    y el archivo está presente. Totalmente opcional: sin esto, basta con
+    exportar las variables a mano o definirlas antes de ejecutar el script."""
+    if not Path(".env").is_file():
+        return
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv(".env")
+    except ImportError:
+        print(
+            "  (aviso) Existe un .env pero 'python-dotenv' no está instalado; "
+            "ignorándolo. Instálalo (pip install python-dotenv) o exporta las "
+            "variables de entorno manualmente."
+        )
+
+
 def main() -> int:
     import os
 
+    _cargar_dotenv_si_existe()
     args = parsear_argumentos()
     ejercicio = args.ejercicio
     fecha_inicio = (

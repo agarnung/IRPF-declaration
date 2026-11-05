@@ -1,1 +1,10 @@
 pandas>=2.0
+
+# --- Módulo PayPal (process_paypal.py) ---
+# El modo mock + heurístico (por defecto, sin credenciales) NO necesita
+# estas dos librerías gracias a imports perezosos, pero se instalan por
+# defecto para que `pip install -r requirements.txt` deje el proyecto listo
+# también para el modo real (PayPal sandbox real + LLM real) sin pasos extra.
+requests>=2.31      # PayPalSandboxClient: REST API del sandbox de PayPal
+openai>=1.0         # LLMTransactionClassifier: API compatible con OpenAI
+python-dotenv>=1.0  # opcional: carga variables desde un .env si existe
