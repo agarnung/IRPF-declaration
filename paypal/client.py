@@ -113,6 +113,13 @@ class PayPalSandboxClient(PayPalClient):
         token = self._obtener_access_token()
         transacciones: list[PayPalTransaction] = []
 
+        # PayPal rechaza un `end_date` en el futuro. Si se consulta un
+        # ejercicio que aún no ha terminado (p. ej. 2026 en noviembre de
+        # 2026), pedimos solo hasta hoy.
+        fecha_fin = min(fecha_fin, date.today())
+        if fecha_inicio > fecha_fin:
+            return []
+
         cursor = fecha_inicio
         while cursor <= fecha_fin:
             bloque_fin = min(cursor + timedelta(days=MAX_DIAS_POR_CONSULTA - 1), fecha_fin)

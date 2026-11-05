@@ -10,7 +10,11 @@ from datetime import date
 from paypal.classifier import CATEGORIAS_FISCALES, HeuristicTransactionClassifier
 from paypal.client import MockPayPalClient
 from process_data import cargar_tipos_bce
-from process_paypal import construir_tabla, resumen_por_categoria
+from process_paypal import (
+    construir_tabla,
+    generar_informe_html,
+    resumen_por_categoria,
+)
 
 
 def test_pipeline_mock_heuristico_produce_tabla_coherente():
@@ -35,3 +39,25 @@ def test_pipeline_mock_heuristico_produce_tabla_coherente():
     assert not resumen.empty
     # La suma de los totales por categoría debe cuadrar con la suma general.
     assert abs(resumen["Importe EUR total"].sum() - tabla["Importe EUR (BCE)"].sum()) < 0.05
+
+
+def test_informe_html_se_genera_y_escapa_contenido():
+    cliente = MockPayPalClient()
+    hoy = date.today()
+    transacciones = cliente.obtener_transacciones(date(hoy.year, 1, 1), date(hoy.year, 12, 31))
+    clasificadas = HeuristicTransactionClassifier().clasificar_lote(transacciones)
+    tabla = construir_tabla(clasificadas, cargar_tipos_bce())
+    resumen = resumen_por_categoria(tabla)
+
+    tabla.loc[0, "Descripción"] = "<script>alert(1)</script>"
+    ruta = generar_informe_html(hoy.year, tabla, resumen, "mock", "heuristic")
+    contenido = ruta.read_text(encoding="utf-8")
+
+    assert ruta.name == "paypal_informe.html"
+    assert "IRPF Tax Assistant" in contenido
+    assert "Occasional sale" in contenido
+    assert "Recurring income" in contenido
+    assert "Only movements to review" in contenido
+    assert "Download CSV" in contenido
+    assert "<script>alert(1)</script>" not in contenido
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in contenido

@@ -25,7 +25,8 @@ Variables de entorno (ver README para la lista completa):
 from __future__ import annotations
 
 import argparse
-from datetime import date
+import html
+from datetime import date, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -60,6 +61,108 @@ EXPLICACION_CATEGORIA = {
     "comision": "Comisión o tarifa de PayPal: gasto deducible solo si hay actividad económica.",
     "otro": "No se ha podido clasificar con certeza: revisar manualmente.",
 }
+
+# Etiquetas y notas en inglés para el informe HTML (el jurado es internacional).
+# Las explicaciones por movimiento las genera el clasificador en español y se
+# muestran tal cual, etiquetadas como tales.
+CATEGORIA_EN = {
+    "venta_ocasional": "Occasional sale",
+    "ingreso_recurrente": "Recurring income",
+    "reembolso": "Refund",
+    "cambio_divisa": "Currency conversion",
+    "comision": "PayPal fee",
+    "otro": "Unclassified",
+}
+
+EXPLICACION_CATEGORIA_EN = {
+    "venta_ocasional": (
+        "One-off sale of a personal item. If the sale price does not exceed the "
+        "acquisition cost, it normally does not generate a capital gain "
+        "(art. 33.1 LIRPF)."
+    ),
+    "ingreso_recurrente": (
+        "Periodic income compatible with economic activity or habitual income: "
+        "declare it as such, not as a one-off capital gain."
+    ),
+    "reembolso": "Refund of a previous payment: not new income.",
+    "cambio_divisa": (
+        "Internal PayPal currency conversion: not, by itself, a sale that "
+        "generates income."
+    ),
+    "comision": "PayPal fee: deductible only if there is economic activity.",
+    "otro": "Could not be classified with certainty: review manually.",
+}
+
+HTML_CSS = """
+:root{--bg:#0b1220;--panel:#111c2e;--line:#1e293b;--text:#f8fafc;--muted:#94a3b8;--green:#22c55e;--blue:#38bdf8;--amber:#f59e0b;--red:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.45}
+a{color:var(--blue)}
+.wrap{max-width:1400px;margin:0 auto;padding:32px 24px 48px}
+.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;flex-wrap:wrap;margin-bottom:24px}
+.eyebrow{color:var(--green);font-weight:700;letter-spacing:.12em;font-size:12px}
+h1{font-size:42px;margin:6px 0 8px;letter-spacing:-.02em}
+h2{font-size:20px;margin:0 0 14px}
+.sub{color:var(--muted);margin:0;max-width:760px}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--text)}
+.badge.review{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.45);color:var(--amber)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:24px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:18px}
+.kpi .label{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+.kpi .value{font-size:34px;font-weight:800;margin-top:6px}
+.kpi .value.green{color:var(--green)}
+.kpi .value.amber{color:var(--amber)}
+.card-head{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.card-head h2{margin:0}
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+input[type=search]{background:#0f172a;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:9px 12px;min-width:320px;font:inherit}
+.check{color:var(--muted);font-size:14px;display:flex;gap:8px;align-items:center}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{position:sticky;top:0;background:#0f172a;text-align:left;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:hover td{background:rgba(56,189,248,.04)}
+.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pos{color:var(--green)}
+.neg{color:var(--red)}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.nowrap{white-space:nowrap}
+.chip{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;border:1px solid transparent}
+.cat-venta_ocasional{background:rgba(34,197,94,.14);color:#86efac;border-color:rgba(34,197,94,.35)}
+.cat-ingreso_recurrente{background:rgba(56,189,248,.14);color:#7dd3fc;border-color:rgba(56,189,248,.35)}
+.cat-reembolso{background:rgba(167,139,250,.14);color:#c4b5fd;border-color:rgba(167,139,250,.35)}
+.cat-cambio_divisa{background:rgba(148,163,184,.14);color:#cbd5e1;border-color:rgba(148,163,184,.35)}
+.cat-comision{background:rgba(245,158,11,.14);color:#fcd34d;border-color:rgba(245,158,11,.35)}
+.cat-otro{background:rgba(248,113,113,.14);color:#fca5a5;border-color:rgba(248,113,113,.35)}
+.bar{display:inline-block;width:72px;height:6px;background:#1e293b;border-radius:999px;overflow:hidden;vertical-align:middle;margin-right:8px}
+.bar span{display:block;height:100%;background:var(--blue)}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{display:inline-block;background:var(--green);color:#052e16;text-decoration:none;border:0;border-radius:10px;padding:10px 14px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit}
+.btn.secondary{background:#1e293b;color:var(--text);border:1px solid var(--line)}
+.disclaimer{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.06);color:#fde68a}
+footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:28px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:32px}input[type=search]{min-width:0;width:100%}}
+@media print{body{background:#fff;color:#111}.card,.badge{border-color:#ddd;background:#fff;color:#111}.muted,.small{color:#555}th{background:#f3f4f6;color:#111}td{border-color:#e5e7eb}.btn,.controls{display:none}footer{color:#555}}
+"""
+
+HTML_JS = """
+const search = document.getElementById('search');
+const onlyReview = document.getElementById('onlyReview');
+const rows = Array.from(document.querySelectorAll('#detail tbody tr'));
+function apply() {
+  const q = (search.value || '').toLowerCase().trim();
+  const r = onlyReview.checked;
+  rows.forEach(row => {
+    const text = row.dataset.search || '';
+    const review = row.dataset.review === '1';
+    row.style.display = (!q || text.includes(q)) && (!r || review) ? '' : 'none';
+  });
+}
+search.addEventListener('input', apply);
+onlyReview.addEventListener('change', apply);
+"""
 
 
 def parsear_argumentos() -> argparse.Namespace:
@@ -184,7 +287,8 @@ def escribir_informe_natural(
         for _, r in resumen.iterrows():
             lineas.append(
                 f"  - {r['Categoría fiscal']}: {r['Nº movimientos']} movimiento(s), "
-                f"{r['Importe EUR total']:.2f} € netos. {r['Explicación general']}"
+                f"{r['Importe EUR total']:.2f} € (importe convertido, sin descontar comisión). "
+                f"{r['Explicación general']}"
             )
         n_revisar = (tabla["Revisar manualmente"] == "Sí").sum()
         if n_revisar:
@@ -200,6 +304,194 @@ def escribir_informe_natural(
                 )
 
     path.write_text("\n".join(lineas) + "\n", encoding="utf-8")
+    return path
+
+
+def generar_informe_html(
+    ejercicio: int,
+    tabla: pd.DataFrame,
+    resumen: pd.DataFrame,
+    modo_paypal: str,
+    modo_clasificador: str,
+) -> Path:
+    """Genera un informe HTML autocontenido (sin servidor ni dependencias) para
+    abrirlo en el navegador durante la demo o guardarlo como PDF.
+
+    Es la capa "producto" del proyecto: KPIs, resumen por categoría, tabla
+    filtrable de movimientos, explicaciones y descargas. No sustituye al CSV ni al
+    resumen en texto; los complementa.
+    """
+    EXTRAS_DIR.mkdir(exist_ok=True)
+    path = EXTRAS_DIR / "paypal_informe.html"
+
+    def e(valor: object) -> str:
+        return html.escape(str(valor), quote=True)
+
+    total_mov = len(tabla)
+    total_eur = float(tabla["Importe EUR (BCE)"].sum()) if not tabla.empty else 0.0
+    n_revisar = (
+        int((tabla["Revisar manualmente"] == "Sí").sum()) if not tabla.empty else 0
+    )
+    n_categorias = int(tabla["Categoría fiscal"].nunique()) if not tabla.empty else 0
+
+    filas_resumen: list[str] = []
+    if not resumen.empty:
+        for _, r in resumen.iterrows():
+            cat = str(r["Categoría fiscal"])
+            importe = float(r["Importe EUR total"])
+            filas_resumen.append(
+                "<tr>"
+                f'<td><span class="chip cat-{e(cat)}">{e(CATEGORIA_EN.get(cat, cat))}</span></td>'
+                f'<td class="num">{int(r["Nº movimientos"])}</td>'
+                f'<td class="num {"pos" if importe >= 0 else "neg"}">{importe:,.2f} €</td>'
+                f'<td class="muted">{e(EXPLICACION_CATEGORIA_EN.get(cat, ""))}</td>'
+                "</tr>"
+            )
+    if not filas_resumen:
+        filas_resumen.append(
+            '<tr><td colspan="4" class="muted">No transactions in this period.</td></tr>'
+        )
+
+    filas_detalle: list[str] = []
+    if not tabla.empty:
+        for _, r in tabla.iterrows():
+            cat = str(r["Categoría fiscal"])
+            revisar = str(r["Revisar manualmente"]) == "Sí"
+            importe = float(r["Importe EUR (BCE)"])
+            confianza = max(0.0, min(1.0, float(r["Confianza IA"])))
+            busqueda = " ".join(
+                str(r[col])
+                for col in (
+                    "Fecha",
+                    "Descripción",
+                    "Categoría fiscal",
+                    "Explicación IRPF (IA)",
+                    "Motor clasificación",
+                )
+            ).lower()
+            etiqueta_revision = (
+                '<span class="badge review">Review</span>'
+                if revisar
+                else '<span class="muted">—</span>'
+            )
+            filas_detalle.append(
+                f'<tr data-review="{"1" if revisar else "0"}" data-search="{e(busqueda)}">'
+                f'<td class="nowrap">{e(r["Fecha"])}</td>'
+                f"<td>{e(r['Descripción'])}</td>"
+                f'<td><span class="chip cat-{e(cat)}">{e(CATEGORIA_EN.get(cat, cat))}</span></td>'
+                f'<td class="num"><span class="bar"><span style="width:{confianza * 100:.0f}%"></span></span>'
+                f'<span class="small">{confianza * 100:.0f}%</span></td>'
+                f'<td class="num {"pos" if importe >= 0 else "neg"}">{importe:,.2f} €</td>'
+                f"<td>{etiqueta_revision}</td>"
+                f'<td class="small">{e(r["Explicación IRPF (IA)"])}</td>'
+                f'<td class="small muted">{e(r["Motor clasificación"])}</td>'
+                "</tr>"
+            )
+    if not filas_detalle:
+        filas_detalle.append(
+            '<tr><td colspan="8" class="muted">No transactions in this period.</td></tr>'
+        )
+
+    descargas: list[str] = []
+    if not tabla.empty:
+        descargas.append(
+            f'<a class="btn" href="../tabla_paypal_irpf_{ejercicio}.csv" download>Download CSV</a>'
+        )
+        descargas.append(
+            '<a class="btn secondary" href="paypal_resumen_por_categoria.csv" download>'
+            "Category summary</a>"
+        )
+    descargas.append(
+        '<a class="btn secondary" href="paypal_resumen_natural.txt" download>'
+        "Summary (TXT)</a>"
+    )
+    descargas.append(
+        '<button class="btn secondary" type="button" onclick="window.print()">'
+        "Print / PDF</button>"
+    )
+
+    modo_paypal_txt = "PayPal sandbox" if modo_paypal == "real" else "Sample data (mock)"
+    modo_clf_txt = "LLM" if modo_clasificador == "llm" else "Heuristic rules"
+    nota_datos = (
+        "Demo uses 8 deterministic sample transactions; no credentials are required."
+        if modo_paypal != "real"
+        else "Demo reads the PayPal sandbox; no real money moves."
+    )
+    generado = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    documento = f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IRPF Tax Assistant — PayPal {ejercicio}</title>
+<style>{HTML_CSS}</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">PAYPAL AI HACKATHON 2026</div>
+      <h1>IRPF Tax Assistant</h1>
+      <p class="sub">From a messy PayPal history to a reviewable Spanish IRPF summary — {ejercicio}. {e(nota_datos)}</p>
+    </div>
+    <div class="badges">
+      <span class="badge">{e(modo_paypal_txt)}</span>
+      <span class="badge">{e(modo_clf_txt)}</span>
+    </div>
+  </header>
+
+  <section class="kpis">
+    <div class="card kpi"><div class="label">Movements</div><div class="value">{total_mov}</div></div>
+    <div class="card kpi"><div class="label">Amount (EUR)</div><div class="value {'neg' if total_eur < 0 else 'green'}">{total_eur:,.2f} €</div></div>
+    <div class="card kpi"><div class="label">Categories</div><div class="value">{n_categorias}</div></div>
+    <div class="card kpi"><div class="label">To review</div><div class="value amber">{n_revisar}</div></div>
+  </section>
+
+  <section class="card">
+    <h2>What it means</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Category</th><th>Movements</th><th>Amount (EUR)</th><th>Tax note</th></tr></thead>
+        <tbody>{''.join(filas_resumen)}</tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Movements</h2>
+      <div class="controls">
+        <input id="search" type="search" placeholder="Filter by description, category or explanation…">
+        <label class="check"><input id="onlyReview" type="checkbox"> Only movements to review</label>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="detail">
+        <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Confidence</th><th>Amount (EUR)</th><th>Review</th><th>Why / explanation</th><th>Engine</th></tr></thead>
+        <tbody>{''.join(filas_detalle)}</tbody>
+      </table>
+    </div>
+    <p class="muted small">Per-row explanations are generated by the classifier in Spanish; the interface labels are in English for the demo.</p>
+    <div class="btns">{''.join(descargas)}</div>
+  </section>
+
+  <section class="card disclaimer">
+    <strong>Automatic orientation, not binding tax advice.</strong>
+    Always review the flagged movements and consult a tax adviser for relevant amounts.
+  </section>
+
+  <footer>
+    <span>Generated {e(generado)}</span>
+    <span>Code: <a href="https://github.com/agarnung/IRPF-declaration">github.com/agarnung/IRPF-declaration</a> (MIT)</span>
+  </footer>
+</div>
+<script>{HTML_JS}</script>
+</body>
+</html>
+"""
+
+    path.write_text(documento, encoding="utf-8")
     return path
 
 
@@ -280,6 +572,9 @@ def main() -> int:
 
         informe = escribir_informe_natural(ejercicio, tabla, resumen, modo_paypal, modo_clasificador)
         print(f"💾 Resumen en lenguaje natural: {informe}")
+
+        informe_html = generar_informe_html(ejercicio, tabla, resumen, modo_paypal, modo_clasificador)
+        print(f"💾 Informe HTML (demo): {informe_html}")
 
         return 0
 

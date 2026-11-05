@@ -17,7 +17,7 @@ Mucha gente con actividad de venta ocasional (Vinted, Wallapop, algún encargo d
 2. **Clasifica** cada movimiento con IA (`paypal/classifier.py`), también detrás de una interfaz:
    - `LLMTransactionClassifier`: real, contra cualquier API **compatible con OpenAI** (OpenAI, Azure OpenAI, OpenRouter, Groq, un servidor propio...). Devuelve categoría, confianza, casilla orientativa de Renta Web y una **explicación en lenguaje natural** del tratamiento fiscal aproximado.
    - `HeuristicTransactionClassifier`: reglas simples (palabras clave, tipo de transacción, detección de recurrencia por importe+contraparte repetidos) que no necesitan API key — sirve de **fallback automático** si el LLM falla y de base para los tests.
-3. Genera `tabla_paypal_irpf_<año>.csv` (detalle por transacción) y `extras/paypal_resumen_natural.txt` (resumen en prosa, con el aviso de que es una orientación automática, no asesoramiento fiscal vinculante).
+3. Genera `tabla_paypal_irpf_<año>.csv` (detalle por transacción), `extras/paypal_resumen_natural.txt` (resumen en prosa, con el aviso de que es una orientación automática, no asesoramiento fiscal vinculante) y `extras/paypal_informe.html` (informe autocontenido para abrir en el navegador: KPIs, tabla filtrable, explicaciones y descargas; sin servidor ni dependencias extra).
 
 Tanto el modo PayPal como el clasificador eligen automáticamente real vs. mock/heurístico según variables de entorno (ver más abajo), con **fallback seguro a mock/heurístico** si faltan credenciales — así la demo nunca se rompe.
 
@@ -63,9 +63,9 @@ Por defecto, `process_paypal.py` funciona **sin ninguna credencial**: usa datos 
 | `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` | Credenciales de tu app en [developer.paypal.com](https://developer.paypal.com/dashboard/) (solo si `PAYPAL_MODE=real`) | — |
 | `PAYPAL_ENV` | `sandbox` o `live` (solo si `PAYPAL_MODE=real`) | `sandbox` |
 | `CLASSIFIER_MODE` | `heuristic` (reglas, sin IA externa) o `llm` (clasificación real con IA) | `heuristic` |
-| `OPENAI_API_KEY` | API key del proveedor LLM (solo si `CLASSIFIER_MODE=llm`) | — |
-| `OPENAI_BASE_URL` | Endpoint, si usas un proveedor distinto de OpenAI compatible con su API | API pública de OpenAI |
-| `OPENAI_MODEL` | Modelo a usar | `gpt-4o-mini` |
+| `OPENAI_API_KEY` / `LITELLM_API_KEY` | API key del proveedor LLM (basta una de las dos; solo si `CLASSIFIER_MODE=llm`) | — |
+| `OPENAI_BASE_URL` / `LITELLM_BASE_URL` | Endpoint compatible con OpenAI. `LITELLM_BASE_URL` añade `/v1` si falta | API pública de OpenAI |
+| `OPENAI_MODEL` / `LLM_MODEL` | Modelo a usar | `gpt-4o-mini` |
 
 ```bash
 # Ejemplo con todo en real (necesita credenciales de PayPal sandbox y una API key de LLM)
@@ -75,6 +75,8 @@ python process_paypal.py --ejercicio 2026
 ```
 
 Si pides modo real pero faltan credenciales, el script **no falla**: avisa por consola y sigue en modo mock/heurístico.
+
+El clasificador acepta también un **proxy LiteLLM local** (Ollama/vLLM/llama.cpp) sin API key de pago: define `LITELLM_API_KEY` y `LITELLM_BASE_URL` (el código añade `/v1` si falta) junto con `LLM_MODEL`. Si el modelo local no soporta `response_format=json_object`, se reintenta sin ese parámetro y se toleran bloques ```` ```json ````; si aun así no devuelve JSON válido, cada transacción cae a la heurística.
 
 ## Entrada y salida
 
@@ -95,7 +97,7 @@ Si pides modo real pero faltan credenciales, el script **no falla**: avisa por c
 |---|---|
 | **Entrada** | Transacciones del rango de fechas indicado (`--fecha-inicio`/`--fecha-fin`, por defecto el año natural de `--ejercicio`), obtenidas del cliente real o mock — no hace falta ningún CSV |
 | **Salida** | `tabla_paypal_irpf_AAAA.csv` — una fila por transacción: categoría fiscal, confianza de la IA, importe convertido a EUR con tipos BCE, casilla orientativa y explicación en lenguaje natural |
-| **Extras** | `extras/paypal_resumen_por_categoria.csv` (totales agregados) y `extras/paypal_resumen_natural.txt` (resumen en prosa + listado de movimientos a revisar manualmente) |
+| **Extras** | `extras/paypal_resumen_por_categoria.csv` (totales agregados), `extras/paypal_resumen_natural.txt` (resumen en prosa + listado de movimientos a revisar manualmente) y `extras/paypal_informe.html` (informe visual autocontenido, listo para el navegador o para guardar como PDF) |
 
 ## Renta Web
 
@@ -116,7 +118,7 @@ pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
-Todos los tests (25) cubren el módulo PayPal — cliente, clasificador y pipeline — y se ejecutan **sin red ni credenciales** (modo mock + heurístico); el único acceso de red real durante los tests es la descarga/caché de tipos del BCE, ya existente para IBKR.
+Todos los tests (30) cubren el módulo PayPal — cliente, clasificador y pipeline — y se ejecutan **sin red ni credenciales** (modo mock + heurístico); el único acceso de red real durante los tests es la descarga/caché de tipos del BCE, ya existente para IBKR.
 
 ## Más información
 

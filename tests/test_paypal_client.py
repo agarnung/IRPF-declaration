@@ -129,3 +129,28 @@ def test_get_paypal_client_real_con_credenciales(monkeypatch):
     monkeypatch.setenv("PAYPAL_CLIENT_SECRET", "secret-test")
     cliente = get_paypal_client()
     assert isinstance(cliente, PayPalSandboxClient)
+
+def test_sandbox_client_no_consulta_fechas_futuras(monkeypatch):
+    """PayPal rechaza end_date en el futuro: el cliente debe capar a hoy."""
+    cliente = PayPalSandboxClient(client_id="id-test", client_secret="secret-test")
+    monkeypatch.setattr(cliente, "_obtener_access_token", lambda: "token-test")
+    calls = []
+
+    class _Resp:
+        status_code = 200
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"total_pages": 0, "transaction_details": []}
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        calls.append(dict(params))
+        return _Resp()
+
+    monkeypatch.setattr("requests.get", fake_get)
+    hoy = date.today()
+    cliente.obtener_transacciones(date(hoy.year, 1, 1), date(hoy.year, 12, 31))
+    assert calls
+    assert all(c["end_date"][:10] <= hoy.isoformat() for c in calls)

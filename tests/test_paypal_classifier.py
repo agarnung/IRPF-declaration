@@ -154,3 +154,36 @@ def test_llm_classifier_cae_a_heuristico_si_la_llamada_falla(monkeypatch):
     assert resultado.categoria in CATEGORIAS_FISCALES
     assert resultado.requiere_revision_manual is True
     assert "LLM no disponible" in resultado.explicacion
+
+def test_parse_json_llm_tolera_code_fences():
+    from paypal.classifier import _parse_json_llm
+
+    datos = _parse_json_llm('```json\n{"categoria": "otro", "confianza": 0.2}\n```')
+    assert datos["categoria"] == "otro"
+    assert datos["confianza"] == 0.2
+
+
+def test_parse_json_llm_tolera_texto_alrededor():
+    from paypal.classifier import _parse_json_llm
+
+    datos = _parse_json_llm('Clasificación: {"categoria": "reembolso"} fin')
+    assert datos["categoria"] == "reembolso"
+
+def test_llm_classifier_acepta_litellm_env(monkeypatch):
+    from paypal.classifier import LLMTransactionClassifier
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_BASE_URL", raising=False)
+    monkeypatch.delenv("OPENAI_MODEL", raising=False)
+    monkeypatch.setenv("LITELLM_API_KEY", "sk-local")
+    monkeypatch.setenv("LITELLM_BASE_URL", "http://127.0.0.1:4000")
+    monkeypatch.setenv("LLM_MODEL", "local-model")
+    c = LLMTransactionClassifier()
+    assert c.api_key == "sk-local"
+    assert c.base_url == "http://127.0.0.1:4000/v1"
+    assert c.model == "local-model"
+
+    # Si ya incluye /v1, no debe duplicarlo.
+    monkeypatch.setenv("LITELLM_BASE_URL", "http://127.0.0.1:4000/v1")
+    c2 = LLMTransactionClassifier()
+    assert c2.base_url == "http://127.0.0.1:4000/v1"

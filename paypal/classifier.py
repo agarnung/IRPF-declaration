@@ -2,10 +2,9 @@
 
 Dos implementaciones de `TransactionClassifier`:
   - `LLMTransactionClassifier`: usa un modelo de lenguaje a través de una API
-    compatible con OpenAI (OpenAI, Azure OpenAI, o cualquier proveedor
-    OpenAI-compatible como Groq/OpenRouter/vLLM) para clasificar cada
-    movimiento y redactar una explicación en lenguaje natural del
-    tratamiento fiscal aproximado en el IRPF.
+    compatible con OpenAI (OpenAI, Azure OpenAI, Groq, OpenRouter, vLLM o un
+    proxy LiteLLM local) para clasificar cada movimiento y redactar una
+    explicación en lenguaje natural del tratamiento fiscal aproximado en el IRPF.
   - `HeuristicTransactionClassifier`: reglas simples (palabras clave, tipo de
     transacción, divisa, recurrencia) que no necesitan API key — fallback
     para la demo y base de los tests.
@@ -92,11 +91,11 @@ class LLMTransactionClassifier(TransactionClassifier):
     """Clasificador real contra una API compatible con OpenAI.
 
     Variables de entorno:
-      - OPENAI_API_KEY (obligatoria)
-      - OPENAI_BASE_URL (opcional; por defecto la API pública de OpenAI —
-        cualquier proveedor OpenAI-compatible vale, p.ej. Azure OpenAI,
-        OpenRouter, Groq, un servidor vLLM propio...)
-      - OPENAI_MODEL (opcional; por defecto MODELO_LLM_DEFECTO)
+      - OPENAI_API_KEY o LITELLM_API_KEY (una de las dos, obligatoria)
+      - OPENAI_BASE_URL o LITELLM_BASE_URL (opcional; por defecto la API
+        pública de OpenAI — cualquier proveedor OpenAI-compatible vale, p.ej.
+        Azure OpenAI, OpenRouter, Groq, vLLM, o un proxy LiteLLM local)
+      - OPENAI_MODEL o LLM_MODEL (opcional; por defecto MODELO_LLM_DEFECTO)
 
     Si la llamada a la API falla (red, cuota, modelo no disponible...), cada
     transacción individual cae en `HeuristicTransactionClassifier` en vez de
@@ -110,15 +109,31 @@ class LLMTransactionClassifier(TransactionClassifier):
         model: str | None = None,
         fallback: TransactionClassifier | None = None,
     ) -> None:
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
-        self.base_url = base_url or os.environ.get("OPENAI_BASE_URL") or None
-        self.model = model or os.environ.get("OPENAI_MODEL", MODELO_LLM_DEFECTO)
+        self.api_key = (
+            api_key
+            or os.environ.get("OPENAI_API_KEY")
+            or os.environ.get("LITELLM_API_KEY")
+            or ""
+        )
+        env_base = os.environ.get("OPENAI_BASE_URL")
+        if not env_base and os.environ.get("LITELLM_BASE_URL"):
+            env_base = os.environ["LITELLM_BASE_URL"].rstrip("/")
+            if not env_base.endswith("/v1"):
+                env_base += "/v1"
+        self.base_url = base_url or env_base or None
+        self.model = (
+            model
+            or os.environ.get("OPENAI_MODEL")
+            or os.environ.get("LLM_MODEL")
+            or MODELO_LLM_DEFECTO
+        )
         self.fallback = fallback or HeuristicTransactionClassifier()
 
         if not self.api_key:
             raise ValueError(
-                "Falta OPENAI_API_KEY. Defínela como variable de entorno o "
-                "usa CLASSIFIER_MODE=heuristic para la demo sin LLM."
+                "Falta OPENAI_API_KEY (o LITELLM_API_KEY). Defínela como "
+                "variable de entorno o usa CLASSIFIER_MODE=heuristic para la "
+                "demo sin LLM."
             )
 
         # Import perezoso: el paquete `openai` solo hace falta en modo real.
@@ -141,17 +156,24 @@ class LLMTransactionClassifier(TransactionClassifier):
     def _clasificar_con_llm(self, transaccion: PayPalTransaction) -> ClassifiedTransaction:
         contenido_usuario = _describir_transaccion_para_prompt(transaccion)
 
-        respuesta = self._client.chat.completions.create(
+        kwargs = dict(
             model=self.model,
             messages=[
                 {"role": "system", "content": PROMPT_SISTEMA},
                 {"role": "user", "content": contenido_usuario},
             ],
             temperature=0.1,
-            response_format={"type": "json_object"},
         )
+        try:
+            respuesta = self._client.chat.completions.create(
+                **kwargs, response_format={"type": "json_object"}
+            )
+        except Exception:
+            # Algunos modelos locales (Ollama/vLLM vía LiteLLM) no soportan
+            # response_format=json_object; reintentamos sin ese parámetro.
+            respuesta = self._client.chat.completions.create(**kwargs)
         bruto = respuesta.choices[0].message.content
-        datos = json.loads(bruto)
+        datos = _parse_json_llm(bruto)
 
         categoria = str(datos.get("categoria", "otro")).strip().lower()
         if categoria not in CATEGORIAS_FISCALES:
@@ -166,6 +188,26 @@ class LLMTransactionClassifier(TransactionClassifier):
             requiere_revision_manual=bool(datos.get("requiere_revision_manual", False)),
             motor="llm",
         )
+
+
+def _parse_json_llm(bruto: str) -> dict:
+    """Extrae JSON de la respuesta de un LLM, tolerando ```json ... ```.
+
+    Los modelos locales a veces envuelven el JSON en markdown o añaden texto;
+    aquí se limpia lo razonable y, si aun así no es JSON, se lanza la excepción
+    para que `clasificar()` caiga a la heurística por transacción.
+    """
+    texto = (bruto or "").strip()
+    if texto.startswith("```"):
+        texto = re.sub(r"^```[a-zA-Z0-9_-]*\s*", "", texto)
+        texto = re.sub(r"\s*```$", "", texto).strip()
+    try:
+        return json.loads(texto)
+    except json.JSONDecodeError:
+        inicio, fin = texto.find("{"), texto.rfind("}")
+        if inicio != -1 and fin > inicio:
+            return json.loads(texto[inicio : fin + 1])
+        raise
 
 
 def _describir_transaccion_para_prompt(t: PayPalTransaction) -> str:
