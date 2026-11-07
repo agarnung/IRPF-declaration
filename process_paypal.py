@@ -511,7 +511,7 @@ def generar_informe_html(
 
   <footer>
     <span>Generated {e(generado)}</span>
-    <span>Code: <a href="https://github.com/agarnung/IRPF-declaration">github.com/agarnung/IRPF-declaration</a> (MIT)</span>
+    <span>Code: <a href="https://github.com/agarnung/IRPF-declaration/tree/paypal-ai-hackathon-2026">github.com/agarnung/IRPF-declaration/tree/paypal-ai-hackathon-2026</a> (MIT)</span>
   </footer>
 </div>
 <script>{HTML_JS}</script>
