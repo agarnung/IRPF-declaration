@@ -51,6 +51,8 @@ python process_paypal.py --ejercicio 2026
 
 `--actualizar-bce` re-downloads the ECB rates (both scripts).
 
+When it finishes, `process_paypal.py` opens `extras/paypal_informe.html` in Chromium (or the default browser). Use `--no-abrir-informe` if you do not want it to open.
+
 If you file IBKR options, read [docs/TUTORIAL_EXPORT_IBKR.md](docs/TUTORIAL_EXPORT_IBKR.md) first: the Flex Query needs extra columns (`UnderlyingSymbol`, `Strike`, `Expiry`, `Put/Call`, `Multiplier`, `Notes/Codes`) that are not needed if you only file stocks.
 
 ### PayPal: mock vs. real mode

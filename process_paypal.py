@@ -26,6 +26,10 @@ from __future__ import annotations
 
 import argparse
 import html
+import os
+import shutil
+import subprocess
+import webbrowser
 from datetime import date, datetime
 from pathlib import Path
 
@@ -194,6 +198,11 @@ def parsear_argumentos() -> argparse.Namespace:
         "--actualizar-bce",
         action="store_true",
         help="Vuelve a descargar el histórico de tipos del BCE",
+    )
+    parser.add_argument(
+        "--no-abrir-informe",
+        action="store_true",
+        help="No abrir el informe HTML en el navegador al terminar",
     )
     return parser.parse_args()
 
@@ -495,6 +504,39 @@ def generar_informe_html(
     return path
 
 
+def abrir_informe_html(path: Path) -> bool:
+    """Abre el informe HTML en Chromium (o en el navegador por defecto).
+
+    Devuelve False si no hay entorno gráfico o si no se encuentra ningún
+    navegador; en ese caso el llamador solo avisa y muestra la ruta.
+    """
+    if not path.is_file():
+        return False
+    if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+        return False
+
+    url = path.resolve().as_uri()
+    for nombre in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable"):
+        exe = shutil.which(nombre)
+        if not exe:
+            continue
+        try:
+            subprocess.Popen(
+                [exe, "--new-window", url],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            return True
+        except OSError:
+            continue
+
+    try:
+        return webbrowser.open(url)
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _cargar_dotenv_si_existe() -> None:
     """Carga variables de entorno desde un .env local si existe python-dotenv
     y el archivo está presente. Totalmente opcional: sin esto, basta con
@@ -575,6 +617,12 @@ def main() -> int:
 
         informe_html = generar_informe_html(ejercicio, tabla, resumen, modo_paypal, modo_clasificador)
         print(f"💾 Informe HTML (demo): {informe_html}")
+
+        if not args.no_abrir_informe:
+            if abrir_informe_html(informe_html):
+                print("🌐 Informe abierto en el navegador")
+            else:
+                print(f"  (aviso) No se pudo abrir el navegador; abre manualmente: {informe_html}")
 
         return 0
 
