@@ -1,5 +1,7 @@
 # IRPF — Interactive Brokers + PayPal
 
+> **English version:** [README-EN.md](README-EN.md)
+
 Genera **tablas CSV definitivas** para la Renta a partir de dos fuentes de datos:
 
 - **Interactive Brokers** (`process_data.py`): compraventa de acciones/ETFs (FIFO, tipos BCE, casillas **0327/0328/0331**) y opciones (calls/puts), incluidas sobre índices.
