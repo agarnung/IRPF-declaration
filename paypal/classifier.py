@@ -303,7 +303,7 @@ class HeuristicTransactionClassifier(TransactionClassifier):
         clave = (t.contraparte.lower(), round(t.importe, 2))
         es_recurrente = self._historial.get(clave, 0) >= 2
 
-        if es_recurrente or _contiene(texto, PALABRAS_RECURRENTE):
+        if t.importe > 0 and (es_recurrente or _contiene(texto, PALABRAS_RECURRENTE)):
             return self._resultado(
                 t, "ingreso_recurrente", 0.75 if es_recurrente else 0.6,
                 "El mismo importe se repite con la misma contraparte (o el "

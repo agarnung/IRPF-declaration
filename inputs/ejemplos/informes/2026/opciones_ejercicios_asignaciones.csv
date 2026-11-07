@@ -1,0 +1,3 @@
+﻿Contrato;Subyacente;Fecha ejercicio/asignación;Operación esperada en la acción;Unidades esperadas;Importe prima EUR (con signo del ajuste);Casilla afectada;Estado
+AAPL C 200 2026-04-17;AAPL;2026-03-15;SELL;100.0;399.0;0328 (transmisión);Aplicado a AAPL SELL 2026-03-15 (1 fila(s) de acciones)
+AAPL P 170 2026-04-17;AAPL;2026-03-20;BUY;100.0;-499.0;0331 (adquisición);Aplicado a AAPL BUY 2026-03-20 (1 fila(s) de acciones)

@@ -1,0 +1,35 @@
+Informe de validación — ejercicio 2026
+==================================================
+
+Archivos de entrada:
+  - inputs/ejemplos/EJEMPLO_2026_opciones.csv
+
+Criterios aplicados (IRPF 2025/2026):
+  - Art. 37.2 LIRPF: FIFO en acciones
+  - Art. 36 Ley 46/1998: tipos BCE por fecha de operación
+  - 0328: importe neto de ventas en EUR (tipo BCE día venta)
+  - 0331: coste FIFO de compras en EUR (tipo BCE día compra)
+  - Art. 37.1.m LIRPF: opciones/futuros, ganancia patrimonial al liquidar/vencer
+  - Art. 34/35 LIRPF (DGT, p.ej. V2172-21): prima de opción sobre ACCIÓN
+    ejercida/asignada se integra en el valor de transmisión o adquisición
+    de la acción, no tributa aparte
+  - Opciones sobre ÍNDICES (liquidación en efectivo, sin entrega de
+    acciones): tributan SIEMPRE como ganancia/pérdida propia (37.1.m),
+    también si están marcadas ejercicio/asignación — no hay acción que
+    ajustar (ver SIMBOLOS_INDICE_LIQUIDACION_EFECTIVO en el script)
+  - Art. 33.5.f LIRPF: pérdidas de ACCIONES NO computables si hay recompra
+    homogénea en los 2 MESES anteriores o posteriores a la venta
+
+Comprobación 0328 - 0331 = ganancia (acciones):
+  OK — todas las filas cuadran.
+
+Filas en tabla definitiva (acciones): 1
+Suma ganancia / pérdida neta acciones (fila TOTAL del CSV): 3896.0 €
+  (Unidades, 0328 y 0331 no se suman: son importes por empresa en Renta Web)
+
+Opciones (calls/puts) cerradas o vencidas sin ejercer:
+  Filas: 2  ·  Ganancia/pérdida neta: -5.0 €
+  Estas NO van en 0327/0328/0331: son ganancia/pérdida patrimonial que no
+  deriva de transmisión de elementos patrimoniales (ver README/CONFORMIDAD).
+
+Límites: ver docs/CONFORMIDAD_NORMATIVA.md

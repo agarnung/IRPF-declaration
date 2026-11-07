@@ -1,0 +1,4 @@
+﻿Contrato;Subyacente;Put/Call;Índice (liq. efectivo);Nº operaciones;Contratos;Prima cobrada (cierres/vencimientos) €;Prima pagada (aperturas consumidas) €;Ganancia / pérdida neta €;Divisas;Nota
+AAPL C 180 2026-06-19;AAPL;C;No;1;2.0;798.0;502.0;296.0;EUR;
+TSLA P 150 2026-02-20;TSLA;P;No;1;1.0;0.0;301.0;-301.0;EUR;
+TOTAL;;;;;;;;-5.0;;

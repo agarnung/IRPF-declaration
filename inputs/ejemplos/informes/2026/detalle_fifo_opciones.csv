@@ -1,0 +1,3 @@
+﻿Contrato;Subyacente;Tipo posición;Fecha cierre/vencimiento;Contratos;Prima cobrada EUR;Prima pagada EUR;Ganancia EUR;Fechas emparejadas
+AAPL C 180 2026-06-19;AAPL;largo;2026-03-01;2.0;798.0;502.0;296.0;2026-01-10, 2026-03-01
+TSLA P 150 2026-02-20;TSLA;largo;2026-02-20;1.0;0.0;301.0;-301.0;2026-01-15, 2026-02-20

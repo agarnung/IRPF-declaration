@@ -413,7 +413,7 @@ def generar_informe_html(
     modo_paypal_txt = "PayPal sandbox" if modo_paypal == "real" else "Sample data (mock)"
     modo_clf_txt = "LLM" if modo_clasificador == "llm" else "Heuristic rules"
     nota_datos = (
-        "Demo uses 8 deterministic sample transactions; no credentials are required."
+        "Demo uses 24 deterministic sample transactions; no credentials are required."
         if modo_paypal != "real"
         else "Demo reads the PayPal sandbox; no real money moves."
     )

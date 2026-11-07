@@ -93,6 +93,19 @@ def test_heuristico_detecta_recurrencia_en_lote():
     assert all(r.categoria == "ingreso_recurrente" for r in resultados)
 
 
+def test_heuristico_suscripcion_negativa_no_es_ingreso_recurrente():
+    clf = HeuristicTransactionClassifier()
+    tx = _tx(
+        importe=-12.99,
+        contraparte="soporte@serviciomusica.example",
+        descripcion="Pago a Servicio de Música",
+        nota_origen="Suscripción personal de música; gasto de uso privado",
+    )
+    resultado = clf.clasificar(tx)
+    assert resultado.categoria == "otro"
+    assert resultado.requiere_revision_manual is True
+
+
 def test_heuristico_sin_pistas_devuelve_otro_y_marca_revision():
     clf = HeuristicTransactionClassifier()
     tx = _tx(importe=250.0, contraparte="desconocido@example.com", descripcion="", nota_origen="")

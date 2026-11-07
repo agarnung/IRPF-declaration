@@ -90,6 +90,7 @@ El clasificador acepta también un **proxy LiteLLM local** (Ollama/vLLM/llama.cp
 | **Minusvalías computables** | `tabla_minusvalias_computables_irpf_AAAA.csv` — solo pérdidas de acciones deducibles ya este ejercicio (regla de los 2 meses) |
 | **Extras** | `extras/` — FIFO, tipos BCE, posiciones abiertas, cruces opción↔acción y análisis completo de la regla de los 2 meses (incluidas las bloqueadas) |
 | **Caché** | `cache/` — tipos BCE descargados |
+| **Ejemplos sintéticos** | `inputs/ejemplos/` (CSV de ejemplo) e `inputs/ejemplos/informes/` (salidas ya generadas con datos inventados, 2025 y 2026) |
 
 ### PayPal
 
@@ -118,7 +119,7 @@ pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
-Todos los tests (30) cubren el módulo PayPal — cliente, clasificador y pipeline — y se ejecutan **sin red ni credenciales** (modo mock + heurístico); el único acceso de red real durante los tests es la descarga/caché de tipos del BCE, ya existente para IBKR.
+Todos los tests (31) cubren el módulo PayPal — cliente, clasificador y pipeline — y se ejecutan **sin red ni credenciales** (modo mock + heurístico); el único acceso de red real durante los tests es la descarga/caché de tipos del BCE, ya existente para IBKR.
 
 ## Más información
 

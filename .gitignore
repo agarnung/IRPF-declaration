@@ -21,3 +21,7 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Informes de ejemplo (sintéticos, sí van al repo)
+!inputs/ejemplos/informes/**/*.csv
+!inputs/ejemplos/informes/**/*.txt

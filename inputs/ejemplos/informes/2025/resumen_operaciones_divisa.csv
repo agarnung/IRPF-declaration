@@ -1,0 +1,5 @@
+﻿Empresa / Par;Divisa;Operación;Nº acciones;Importe (divisa);Comisiones (divisa)
+CORTO;EUR;BUY;50;900;1
+CORTO;EUR;SELL;50;1000;1
+NVDA;USD;SELL;100;15000;2
+USDX;USD;SELL;10;1600;1

@@ -1,0 +1,3 @@
+﻿Empresa;Fecha operación;Año;Operación;Divisa;Unidades;Proceeds divisa;Comisión divisa;Fecha tipo BCE;Tipo BCE (divisa/EUR);Importe EUR (BCE);Ajuste por opción ejercida/asignada €;Importe EUR final
+AAPL;15/03/2026 10:00;2026;APERTURA_CORTO;EUR;-100.0;20000.0;-1.0;2026-03-15;1.0;19999.0;399.0;20398.0
+AAPL;20/03/2026 10:00;2026;RECOMPRA_CORTO;EUR;100.0;-17000.0;-1.0;2026-03-20;1.0;17001.0;-499.0;16502.0

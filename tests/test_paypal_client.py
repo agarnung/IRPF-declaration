@@ -30,7 +30,7 @@ def test_mock_client_devuelve_transacciones_de_ejemplo():
     cliente = MockPayPalClient()
     hoy = date.today()
     txs = cliente.obtener_transacciones(date(hoy.year, 1, 1), date(hoy.year, 12, 31))
-    assert len(txs) == 8
+    assert len(txs) == 24
     assert all(isinstance(t, PayPalTransaction) for t in txs)
 
 
