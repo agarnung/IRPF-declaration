@@ -256,7 +256,7 @@ def parse_datetime_ibkr(value: str) -> datetime:
 
 
 def descargar_ecb_xml(url: str = ECB_HIST_URL) -> bytes:
-    print(f"  Descargando tipos BCE desde {url} ...")
+    print(f"  Downloading ECB rates from {url} ...")
     with urlopen(url, timeout=120) as resp:
         return resp.read()
 
@@ -271,23 +271,23 @@ def cargar_tipos_bce(forzar_descarga: bool = False) -> dict[date, dict[str, floa
 
     if CACHE_ECB_XML.exists() and not forzar_descarga:
         xml_bytes = CACHE_ECB_XML.read_bytes()
-        print(f"  Usando caché local: {CACHE_ECB_XML}")
+        print(f"  Using local cache: {CACHE_ECB_XML}")
 
     if xml_bytes is None:
         try:
             xml_bytes = descargar_ecb_xml(ECB_HIST_URL)
         except URLError:
             try:
-                print("  Histórico completo no disponible; probando últimos 90 días...")
+                print("  Full history unavailable; trying the last 90 days...")
                 xml_bytes = descargar_ecb_xml(ECB_HIST_90D_URL)
             except URLError as exc:
                 if CACHE_ECB_XML.exists():
-                    print(f"  Sin red; usando caché antigua ({exc})")
+                    print(f"  No network; using the old cache ({exc})")
                     xml_bytes = CACHE_ECB_XML.read_bytes()
                 else:
                     raise RuntimeError(
-                        "No hay conexión al BCE y no existe cache/ecb_eurofxref_hist.xml. "
-                        "Conéctate a Internet y vuelve a ejecutar el script."
+                        "No connection to the ECB and cache/ecb_eurofxref_hist.xml "
+                        "does not exist. Connect to the Internet and run the script again."
                     ) from exc
 
         CACHE_ECB_XML.write_bytes(xml_bytes)

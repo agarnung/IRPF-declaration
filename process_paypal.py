@@ -172,37 +172,37 @@ onlyReview.addEventListener('change', apply);
 def parsear_argumentos() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Importa transacciones de PayPal (mock o sandbox real) y las "
-            "clasifica fiscalmente con IA para el IRPF."
+            "Import PayPal transactions (mock or real sandbox) and classify "
+            "them for Spanish personal income tax (IRPF) with AI."
         )
     )
     parser.add_argument(
         "--ejercicio",
         type=int,
         default=date.today().year,
-        help="Año a declarar (por defecto, el año en curso)",
+        help="Tax year to report (default: current year)",
     )
     parser.add_argument(
         "--fecha-inicio",
         type=str,
         default=None,
-        help="YYYY-MM-DD; por defecto 1 de enero del ejercicio",
+        help="YYYY-MM-DD; defaults to January 1 of the tax year",
     )
     parser.add_argument(
         "--fecha-fin",
         type=str,
         default=None,
-        help="YYYY-MM-DD; por defecto 31 de diciembre del ejercicio",
+        help="YYYY-MM-DD; defaults to December 31 of the tax year",
     )
     parser.add_argument(
         "--actualizar-bce",
         action="store_true",
-        help="Vuelve a descargar el histórico de tipos del BCE",
+        help="Re-download the full ECB exchange-rate history",
     )
     parser.add_argument(
         "--no-abrir-informe",
         action="store_true",
-        help="No abrir el informe HTML en el navegador al terminar",
+        help="Do not open the HTML report in the browser when finished",
     )
     return parser.parse_args()
 
@@ -263,6 +263,25 @@ def resumen_por_categoria(tabla: pd.DataFrame) -> pd.DataFrame:
         lambda c: EXPLICACION_CATEGORIA.get(c, "")
     )
     return resumen
+
+
+def _resumen_para_consola(resumen: pd.DataFrame) -> pd.DataFrame:
+    if resumen.empty:
+        return resumen
+    out = resumen.copy()
+    categorias = out["Categoría fiscal"]
+    out["Categoría fiscal"] = categorias.map(lambda c: CATEGORIA_EN.get(c, c))
+    out["Explicación general"] = categorias.map(
+        lambda c: EXPLICACION_CATEGORIA_EN.get(c, "")
+    )
+    return out.rename(
+        columns={
+            "Categoría fiscal": "Tax category",
+            "Nº movimientos": "Movements",
+            "Importe EUR total": "Total EUR",
+            "Explicación general": "General explanation",
+        }
+    )
 
 
 def guardar_csv(path: Path | str, tabla: pd.DataFrame) -> None:
@@ -504,6 +523,32 @@ def generar_informe_html(
     return path
 
 
+def _copia_informe_para_navegador(path: Path) -> Path:
+    """Copia el informe y sus descargas a una carpeta visible para Chromium snap.
+
+    El Chromium de Ubuntu suele estar empaquetado como snap y no puede leer
+    rutas como /opt; en ese caso el navegador muestra ERR_FILE_NOT_FOUND aunque
+    el fichero exista. Se replica la estructura relativa del informe bajo
+    $HOME/irpf-paypal para que los enlaces de descarga sigan funcionando.
+    """
+    destino_dir = Path.home() / "irpf-paypal"
+    destino = destino_dir / "extras" / path.name
+    try:
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, destino)
+        for origen in (
+            EXTRAS_DIR / "paypal_resumen_por_categoria.csv",
+            EXTRAS_DIR / "paypal_resumen_natural.txt",
+        ):
+            if origen.is_file():
+                shutil.copy2(origen, destino_dir / "extras" / origen.name)
+        for origen in Path(".").glob("tabla_paypal_irpf_*.csv"):
+            shutil.copy2(origen, destino_dir / origen.name)
+        return destino
+    except OSError:
+        return path
+
+
 def abrir_informe_html(path: Path) -> bool:
     """Abre el informe HTML en Chromium (o en el navegador por defecto).
 
@@ -515,7 +560,10 @@ def abrir_informe_html(path: Path) -> bool:
     if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
         return False
 
-    url = path.resolve().as_uri()
+    ruta_navegador = _copia_informe_para_navegador(path)
+    if ruta_navegador != path:
+        print(f"  Browser copy: {ruta_navegador}")
+    url = ruta_navegador.resolve().as_uri()
     for nombre in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable"):
         exe = shutil.which(nombre)
         if not exe:
@@ -549,9 +597,9 @@ def _cargar_dotenv_si_existe() -> None:
         load_dotenv(".env")
     except ImportError:
         print(
-            "  (aviso) Existe un .env pero 'python-dotenv' no está instalado; "
-            "ignorándolo. Instálalo (pip install python-dotenv) o exporta las "
-            "variables de entorno manualmente."
+            "  (warning) A .env file exists but 'python-dotenv' is not installed; "
+            "ignoring it. Install it (pip install python-dotenv) or export the "
+            "environment variables manually."
         )
 
 
@@ -572,57 +620,57 @@ def main() -> int:
     modo_clasificador = os.environ.get("CLASSIFIER_MODE", "heuristic").strip().lower()
 
     print("=" * 70)
-    print(f"IRPF — PayPal: importación + clasificación fiscal con IA, ejercicio {ejercicio}")
+    print(f"IRPF — PayPal: import + AI tax classification, tax year {ejercicio}")
     print("=" * 70)
 
     try:
-        print(f"\n[1/4] Obteniendo transacciones de PayPal ({fecha_inicio} a {fecha_fin})...")
-        print(f"  Modo PayPal: {modo_paypal}")
+        print(f"\n[1/4] Fetching PayPal transactions ({fecha_inicio} to {fecha_fin})...")
+        print(f"  PayPal mode: {modo_paypal}")
         cliente = get_paypal_client()
         transacciones = cliente.obtener_transacciones(fecha_inicio, fecha_fin)
-        print(f"  Transacciones obtenidas: {len(transacciones)}")
+        print(f"  Transactions fetched: {len(transacciones)}")
 
         if not transacciones:
-            print("  (Aviso) No hay transacciones de PayPal en el rango indicado.")
+            print("  (Warning) No PayPal transactions in the selected range.")
 
-        print(f"\n[2/4] Clasificando fiscalmente con IA (modo: {modo_clasificador})...")
+        print(f"\n[2/4] Classifying transactions with AI (mode: {modo_clasificador})...")
         clasificador = get_classifier()
         clasificadas = clasificador.clasificar_lote(transacciones)
-        print(f"  Movimientos clasificados: {len(clasificadas)}")
+        print(f"  Transactions classified: {len(clasificadas)}")
 
-        print("\n[3/4] Cargando tipos de cambio oficiales del BCE y convirtiendo a EUR...")
+        print("\n[3/4] Loading official ECB exchange rates and converting to EUR...")
         rates = cargar_tipos_bce(forzar_descarga=args.actualizar_bce)
         tabla = construir_tabla(clasificadas, rates)
         resumen = resumen_por_categoria(tabla)
 
-        print("\n[4/4] Resultados\n")
+        print("\n[4/4] Results\n")
         print("=" * 70)
-        print(f"TABLA PAYPAL — ejercicio {ejercicio}")
+        print(f"PAYPAL TABLE — tax year {ejercicio}")
         print("=" * 70)
         if tabla.empty:
-            print("  (No hay transacciones de PayPal que declarar en este ejercicio)")
+            print("  (No PayPal transactions to report for this tax year)")
         else:
-            print(resumen.to_string(index=False))
+            print(_resumen_para_consola(resumen).to_string(index=False))
 
         nombre_tabla = f"tabla_paypal_irpf_{ejercicio}.csv"
         if not tabla.empty:
             guardar_csv(nombre_tabla, tabla)
-            print(f"\n💾 Tabla detallada: {nombre_tabla}")
+            print(f"\n💾 Detailed table: {nombre_tabla}")
 
             EXTRAS_DIR.mkdir(exist_ok=True)
             guardar_csv(EXTRAS_DIR / "paypal_resumen_por_categoria.csv", resumen)
 
         informe = escribir_informe_natural(ejercicio, tabla, resumen, modo_paypal, modo_clasificador)
-        print(f"💾 Resumen en lenguaje natural: {informe}")
+        print(f"💾 Natural-language summary: {informe}")
 
         informe_html = generar_informe_html(ejercicio, tabla, resumen, modo_paypal, modo_clasificador)
-        print(f"💾 Informe HTML (demo): {informe_html}")
+        print(f"💾 HTML report (demo): {informe_html}")
 
         if not args.no_abrir_informe:
             if abrir_informe_html(informe_html):
-                print("🌐 Informe abierto en el navegador")
+                print("🌐 Report opened in the browser")
             else:
-                print(f"  (aviso) No se pudo abrir el navegador; abre manualmente: {informe_html}")
+                print(f"  (warning) Could not open the browser; open it manually: {informe_html}")
 
         return 0
 

@@ -71,9 +71,9 @@ class PayPalSandboxClient(PayPalClient):
 
         if not self.client_id or not self.client_secret:
             raise ValueError(
-                "Faltan credenciales de PayPal: define PAYPAL_CLIENT_ID y "
-                "PAYPAL_CLIENT_SECRET (sandbox de developer.paypal.com) como "
-                "variables de entorno, o usa PAYPAL_MODE=mock para la demo."
+                "Missing PayPal credentials: set PAYPAL_CLIENT_ID and "
+                "PAYPAL_CLIENT_SECRET (sandbox at developer.paypal.com) as "
+                "environment variables, or use PAYPAL_MODE=mock for the demo."
             )
 
         self._oauth_url = (
@@ -227,8 +227,8 @@ def get_paypal_client() -> PayPalClient:
             return PayPalSandboxClient()
         except ValueError as exc:
             print(
-                f"  (aviso) PAYPAL_MODE=real pero {exc} "
-                "Usando MockPayPalClient como fallback."
+                f"  (warning) PAYPAL_MODE=real but {exc} "
+                "Using MockPayPalClient as fallback."
             )
             return MockPayPalClient()
     return MockPayPalClient()

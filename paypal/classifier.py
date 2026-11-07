@@ -131,9 +131,9 @@ class LLMTransactionClassifier(TransactionClassifier):
 
         if not self.api_key:
             raise ValueError(
-                "Falta OPENAI_API_KEY (o LITELLM_API_KEY). Defínela como "
-                "variable de entorno o usa CLASSIFIER_MODE=heuristic para la "
-                "demo sin LLM."
+                "Missing OPENAI_API_KEY (or LITELLM_API_KEY). Set it as an "
+                "environment variable or use CLASSIFIER_MODE=heuristic for the "
+                "demo without an LLM."
             )
 
         # Import perezoso: el paquete `openai` solo hace falta en modo real.
@@ -390,8 +390,8 @@ def get_classifier() -> TransactionClassifier:
             return LLMTransactionClassifier()
         except ValueError as exc:
             print(
-                f"  (aviso) CLASSIFIER_MODE=llm pero {exc} "
-                "Usando HeuristicTransactionClassifier como fallback."
+                f"  (warning) CLASSIFIER_MODE=llm but {exc} "
+                "Using HeuristicTransactionClassifier as fallback."
             )
             return HeuristicTransactionClassifier()
     return HeuristicTransactionClassifier()

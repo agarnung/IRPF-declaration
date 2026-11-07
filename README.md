@@ -53,7 +53,7 @@ python process_paypal.py --ejercicio 2026
 
 `--actualizar-bce` vuelve a descargar los tipos del BCE (ambos scripts).
 
-Al terminar, `process_paypal.py` abre `extras/paypal_informe.html` en Chromium (o en el navegador por defecto). Usa `--no-abrir-informe` si no quieres que se abra.
+Al terminar, `process_paypal.py` abre `extras/paypal_informe.html` en Chromium (o en el navegador por defecto). Si Chromium está instalado como snap (habitual en Ubuntu), el informe y sus descargas se copian a `~/irpf-paypal/` para que el navegador pueda leerlos. Usa `--no-abrir-informe` si no quieres que se abra.
 
 Si declaras opciones de IBKR, mira antes [docs/TUTORIAL_EXPORT_IBKR.md](docs/TUTORIAL_EXPORT_IBKR.md): la Flex Query necesita columnas extra (`UnderlyingSymbol`, `Strike`, `Expiry`, `Put/Call`, `Multiplier`, `Notes/Codes`) que no hacen falta si solo declaras acciones.
 
