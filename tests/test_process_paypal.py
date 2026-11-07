@@ -10,6 +10,7 @@ from datetime import date
 from paypal.classifier import CATEGORIAS_FISCALES, HeuristicTransactionClassifier
 from paypal.client import MockPayPalClient
 from process_data import cargar_tipos_bce
+import process_paypal
 from process_paypal import (
     construir_tabla,
     generar_informe_html,
@@ -41,7 +42,8 @@ def test_pipeline_mock_heuristico_produce_tabla_coherente():
     assert abs(resumen["Importe EUR total"].sum() - tabla["Importe EUR (BCE)"].sum()) < 0.05
 
 
-def test_informe_html_se_genera_y_escapa_contenido():
+def test_informe_html_se_genera_y_escapa_contenido(tmp_path, monkeypatch):
+    monkeypatch.setattr(process_paypal, "EXTRAS_DIR", tmp_path)
     cliente = MockPayPalClient()
     hoy = date.today()
     transacciones = cliente.obtener_transacciones(date(hoy.year, 1, 1), date(hoy.year, 12, 31))

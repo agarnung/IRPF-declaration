@@ -1,0 +1,32 @@
+Resumen fiscal de PayPal — ejercicio 2026
+============================================================
+
+Fuente de datos: datos de ejemplo (mock)
+Clasificador: heurístico (reglas)
+
+AVISO: esto es una orientación automática, no asesoramiento fiscal
+vinculante. Revisa siempre las filas marcadas 'Revisar manualmente'
+y, ante dudas o importes relevantes, consulta con un asesor fiscal.
+
+Total de movimientos analizados: 24
+
+Por categoría fiscal:
+  - cambio_divisa: 3 movimiento(s), 305.30 € (importe convertido, sin descontar comisión). Conversión interna de divisa en PayPal: no es, por sí sola, una compraventa que genere renta.
+  - comision: 3 movimiento(s), -8.50 € (importe convertido, sin descontar comisión). Comisión o tarifa de PayPal: gasto deducible solo si hay actividad económica.
+  - ingreso_recurrente: 6 movimiento(s), 3600.00 € (importe convertido, sin descontar comisión). Ingreso periódico compatible con actividad económica o rendimiento habitual: debe declararse como tal, no como ganancia patrimonial puntual.
+  - otro: 4 movimiento(s), 120.73 € (importe convertido, sin descontar comisión). No se ha podido clasificar con certeza: revisar manualmente.
+  - reembolso: 3 movimiento(s), -154.98 € (importe convertido, sin descontar comisión). Devolución de un pago anterior: no es una renta nueva.
+  - venta_ocasional: 5 movimiento(s), 1625.15 € (importe convertido, sin descontar comisión). Venta ocasional de un bien personal (tipo Vinted/Wallapop). Si el precio de venta no supera el de adquisición, normalmente no genera ganancia patrimonial (art. 33.1 LIRPF).
+
+11 movimiento(s) marcado(s) para revisión manual (ambigüedad, importe elevado o posible actividad económica no declarada):
+  - 2026-02-01 · Pago recibido de Cliente Freelance SL (600.00 €): El mismo importe se repite con la misma contraparte (o el texto sugiere un cobro periódico): es compatible con actividad económica (autónomo) o rendimiento habitual, que debe declararse como rendimiento de actividades económicas o del trabajo, no como ganancia patrimonial puntual. Revisa si estás dado de alta como autónomo si esto es recurrente y significativo.
+  - 2026-02-03 · Pago recibido de Cliente Freelance SL (600.00 €): El mismo importe se repite con la misma contraparte (o el texto sugiere un cobro periódico): es compatible con actividad económica (autónomo) o rendimiento habitual, que debe declararse como rendimiento de actividades económicas o del trabajo, no como ganancia patrimonial puntual. Revisa si estás dado de alta como autónomo si esto es recurrente y significativo.
+  - 2026-07-11 · Pago recibido de desconocido@example.com (218.72 €): No se ha podido determinar con reglas simples el origen de este ingreso. Revisa manualmente si corresponde a una venta ocasional, un ingreso recurrente u otro concepto antes de incluirlo (o no) en la declaración.
+  - 2026-08-01 · Pago recibido de Cliente Freelance SL (600.00 €): El mismo importe se repite con la misma contraparte (o el texto sugiere un cobro periódico): es compatible con actividad económica (autónomo) o rendimiento habitual, que debe declararse como rendimiento de actividades económicas o del trabajo, no como ganancia patrimonial puntual. Revisa si estás dado de alta como autónomo si esto es recurrente y significativo.
+  - 2026-09-01 · Pago recibido de Cliente Freelance SL (600.00 €): El mismo importe se repite con la misma contraparte (o el texto sugiere un cobro periódico): es compatible con actividad económica (autónomo) o rendimiento habitual, que debe declararse como rendimiento de actividades económicas o del trabajo, no como ganancia patrimonial puntual. Revisa si estás dado de alta como autónomo si esto es recurrente y significativo.
+  - 2026-10-20 · Pago recibido de coleccionista.wallapop@example.com (1400.00 €): Parece una venta puntual de un bien personal de segunda mano (tipo Vinted/Wallapop). Si se vende por un importe igual o inferior al precio de adquisición, normalmente no genera ganancia patrimonial (art. 33.1 LIRPF); si se vende por más de lo pagado, sí habría ganancia patrimonial a declarar. Si estas ventas son frecuentes o de importe elevado, Hacienda puede considerarlo actividad económica. Importe elevado: revisa si es realmente ocasional.
+  - 2026-10-26 · Pago recibido de Cliente Freelance SL (600.00 €): El mismo importe se repite con la misma contraparte (o el texto sugiere un cobro periódico): es compatible con actividad económica (autónomo) o rendimiento habitual, que debe declararse como rendimiento de actividades económicas o del trabajo, no como ganancia patrimonial puntual. Revisa si estás dado de alta como autónomo si esto es recurrente y significativo.
+  - 2026-10-27 · Pago a Servicio de Música (-12.99 €): No se ha podido determinar con reglas simples el motivo de este cargo. Revisa manualmente el movimiento.
+  - 2026-10-29 · Pago recibido de Cliente Freelance SL (600.00 €): El mismo importe se repite con la misma contraparte (o el texto sugiere un cobro periódico): es compatible con actividad económica (autónomo) o rendimiento habitual, que debe declararse como rendimiento de actividades económicas o del trabajo, no como ganancia patrimonial puntual. Revisa si estás dado de alta como autónomo si esto es recurrente y significativo.
+  - 2026-11-02 · Envío a amigo (-50.00 €): No se ha podido determinar con reglas simples el motivo de este cargo. Revisa manualmente el movimiento.
+  - 2026-11-04 · Contracargo de comprador (-35.00 €): No se ha podido determinar con reglas simples el motivo de este cargo. Revisa manualmente el movimiento.

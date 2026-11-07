@@ -25,3 +25,9 @@ __pycache__/
 # Informes de ejemplo (sintéticos, sí van al repo)
 !inputs/ejemplos/informes/**/*.csv
 !inputs/ejemplos/informes/**/*.txt
+
+# Demo estática para Devpost (sí va al repo)
+!demo/
+!demo/*.html
+!demo/*.csv
+!demo/*.txt

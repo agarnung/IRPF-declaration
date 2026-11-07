@@ -1,0 +1,7 @@
+﻿Categoría fiscal;Nº movimientos;Importe EUR total;Explicación general
+cambio_divisa;3;305.3;Conversión interna de divisa en PayPal: no es, por sí sola, una compraventa que genere renta.
+comision;3;-8.5;Comisión o tarifa de PayPal: gasto deducible solo si hay actividad económica.
+ingreso_recurrente;6;3600.0;Ingreso periódico compatible con actividad económica o rendimiento habitual: debe declararse como tal, no como ganancia patrimonial puntual.
+otro;4;120.73;No se ha podido clasificar con certeza: revisar manualmente.
+reembolso;3;-154.98;Devolución de un pago anterior: no es una renta nueva.
+venta_ocasional;5;1625.15;Venta ocasional de un bien personal (tipo Vinted/Wallapop). Si el precio de venta no supera el de adquisición, normalmente no genera ganancia patrimonial (art. 33.1 LIRPF).
