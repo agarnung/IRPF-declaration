@@ -78,6 +78,8 @@ python process_paypal.py --ejercicio 2026
 
 Si pides modo real pero faltan credenciales, el script **no falla**: avisa por consola y sigue en modo mock/heurístico.
 
+> **Si el sandbox real falla por red/DNS**, no hace falta arreglarlo para la demo: usa `PAYPAL_MODE=mock` (24 movimientos de ejemplo) y, si quieres, `CLASSIFIER_MODE=llm`. El fallback automático a mock/heurístico solo cubre credenciales ausentes; un fallo de red en modo real sí corta la ejecución, así que para grabar usa el mock.
+
 El clasificador acepta también un **proxy LiteLLM local** (Ollama/vLLM/llama.cpp) sin API key de pago: define `LITELLM_API_KEY` y `LITELLM_BASE_URL` (el código añade `/v1` si falta) junto con `LLM_MODEL`. Si el modelo local no soporta `response_format=json_object`, se reintenta sin ese parámetro y se toleran bloques ```` ```json ````; si aun así no devuelve JSON válido, cada transacción cae a la heurística.
 
 ## Entrada y salida
