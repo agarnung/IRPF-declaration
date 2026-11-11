@@ -178,29 +178,39 @@ def parsear_argumentos() -> argparse.Namespace:
     )
     parser.add_argument(
         "--ejercicio",
+        "--year",
+        dest="ejercicio",
         type=int,
         default=date.today().year,
         help="Tax year to report (default: current year)",
     )
     parser.add_argument(
         "--fecha-inicio",
+        "--start-date",
+        dest="fecha_inicio",
         type=str,
         default=None,
         help="YYYY-MM-DD; defaults to January 1 of the tax year",
     )
     parser.add_argument(
         "--fecha-fin",
+        "--end-date",
+        dest="fecha_fin",
         type=str,
         default=None,
         help="YYYY-MM-DD; defaults to December 31 of the tax year",
     )
     parser.add_argument(
         "--actualizar-bce",
+        "--update-ecb",
+        dest="actualizar_bce",
         action="store_true",
         help="Re-download the full ECB exchange-rate history",
     )
     parser.add_argument(
         "--no-abrir-informe",
+        "--no-open-report",
+        dest="no_abrir_informe",
         action="store_true",
         help="Do not open the HTML report in the browser when finished",
     )

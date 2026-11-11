@@ -1446,18 +1446,22 @@ def guardar_csv(path: Path | str, tabla: pd.DataFrame) -> None:
 
 def parsear_argumentos() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Tabla IRPF: BCE + FIFO, acciones y opciones (un ejercicio fiscal en la salida)."
+        description="IRPF table: ECB + FIFO, stocks and options (one tax year in the output)."
     )
     parser.add_argument(
         "--ejercicio",
+        "--year",
+        dest="ejercicio",
         type=int,
         default=EJERCICIO_FISCAL,
-        help=f"Año a declarar (por defecto {EJERCICIO_FISCAL})",
+        help=f"Year to report (default {EJERCICIO_FISCAL})",
     )
     parser.add_argument(
         "--actualizar-bce",
+        "--update-ecb",
+        dest="actualizar_bce",
         action="store_true",
-        help="Vuelve a descargar el histórico de tipos del BCE",
+        help="Re-download the ECB exchange-rate history",
     )
     return parser.parse_args()
 

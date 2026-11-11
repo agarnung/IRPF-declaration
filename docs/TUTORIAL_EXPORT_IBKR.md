@@ -1,3 +1,5 @@
+> **English version:** [TUTORIAL_EXPORT_IBKR_EN.md](TUTORIAL_EXPORT_IBKR_EN.md)
+
 # Cómo exportar el CSV desde Interactive Brokers
 
 El script necesita **operaciones en bruto** (CSV), no un PDF ni un informe de «P&G realizadas» de IBKR. Esos informes usan **tipos de cambio del bróker**; Hacienda exige el **BCE del día de cada operación** y el método **FIFO**.

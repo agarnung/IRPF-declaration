@@ -1,3 +1,5 @@
+> **English version:** [CONFORMIDAD_NORMATIVA_EN.md](CONFORMIDAD_NORMATIVA_EN.md)
+
 # Conformidad normativa — IRPF 2025/2026 (revisión del script)
 
 Este documento resume cómo `process_data.py` se alinea con la normativa española vigente para **transmisiones de acciones cotizadas** y **opciones financieras (calls/puts)** sobre acciones (Interactive Brokers, valores homogéneos). No sustituye asesoramiento fiscal profesional — especialmente en opciones, donde la casuística de ejercicio/asignación puede ser compleja.

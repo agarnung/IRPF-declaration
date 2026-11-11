@@ -1,122 +1,123 @@
+> **English README (required by the hackathon).** Spanish version: [README_ES.md](README_ES.md).
+> The project overview, setup, run and test instructions below are in English. The demo video has English narration and English subtitles.
+
 # IRPF — Interactive Brokers + PayPal
 
-> **English version:** [README-EN.md](README-EN.md)
+Generates **definitive CSV tables** for the Spanish income tax return from two data sources:
 
-Genera **tablas CSV definitivas** para la Renta a partir de dos fuentes de datos:
-
-- **Interactive Brokers** (`process_data.py`): compraventa de acciones/ETFs (FIFO, tipos BCE, casillas **0327/0328/0331**) y opciones (calls/puts), incluidas sobre índices.
-- **PayPal** (`process_paypal.py`, **nuevo**): importa tus movimientos de PayPal y usa **IA** para clasificar cada uno (venta ocasional, ingreso recurrente, reembolso, cambio de divisa, comisión) y explicarte en lenguaje natural su tratamiento fiscal aproximado en el IRPF.
+- **Interactive Brokers** (`process_data.py`): stock/ETF trades (FIFO, ECB rates, boxes **0327/0328/0331**) and options (calls/puts), including index options.
+- **PayPal** (`process_paypal.py`, **new**): imports your PayPal movements and uses **AI** to classify each one (occasional sale, recurring income, refund, currency conversion, fee) and explain in plain language its approximate tax treatment in the Spanish IRPF.
 
 ![](https://s3.elespanol.com/2026/05/22/actualidad/1003744256765_263093308_1024x576.jpg)
 
-## Novedad: módulo PayPal + IA (PayPal AI Hackathon 2026)
+## New: PayPal + AI module (PayPal AI Hackathon 2026)
 
-Mucha gente con actividad de venta ocasional (Vinted, Wallapop, algún encargo de freelance puntual, reembolsos de compras) tiene movimientos en PayPal que **nadie categoriza bien** a la hora de declarar la Renta. Este módulo, añadido durante el **PayPal AI Hackathon 2026**, cubre justo eso:
+Many people with occasional selling activity (Vinted, Wallapop, a one-off freelance job, purchase refunds) have PayPal movements that **nobody classifies properly** when filing their tax return. This module, added during the **PayPal AI Hackathon 2026**, covers exactly that:
 
-1. **Importa** el histórico de transacciones de PayPal — igual que ya se hace con los exports de IBKR — a través de un cliente desacoplado detrás de una interfaz (`paypal/client.py`), con dos implementaciones intercambiables:
-   - `PayPalSandboxClient`: real, contra la **REST API del sandbox de PayPal** (OAuth2 *client credentials* + Transaction Search API).
-   - `MockPayPalClient`: datos de ejemplo realistas y deterministas, para poder usar y probar el proyecto **sin credenciales de PayPal**.
-2. **Clasifica** cada movimiento con IA (`paypal/classifier.py`), también detrás de una interfaz:
-   - `LLMTransactionClassifier`: real, contra cualquier API **compatible con OpenAI** (OpenAI, Azure OpenAI, OpenRouter, Groq, un servidor propio...). Devuelve categoría, confianza, casilla orientativa de Renta Web y una **explicación en lenguaje natural** del tratamiento fiscal aproximado.
-   - `HeuristicTransactionClassifier`: reglas simples (palabras clave, tipo de transacción, detección de recurrencia por importe+contraparte repetidos) que no necesitan API key — sirve de **fallback automático** si el LLM falla y de base para los tests.
-3. Genera `tabla_paypal_irpf_<año>.csv` (detalle por transacción), `extras/paypal_resumen_natural.txt` (resumen en prosa, con el aviso de que es una orientación automática, no asesoramiento fiscal vinculante) y `extras/paypal_informe.html` (informe autocontenido para abrir en el navegador: KPIs, tabla filtrable, explicaciones y descargas; sin servidor ni dependencias extra).
+1. **Imports** the PayPal transaction history — just like the existing IBKR exports — through a decoupled client behind an interface (`paypal/client.py`), with two interchangeable implementations:
+   - `PayPalSandboxClient`: real, against the **PayPal sandbox REST API** (OAuth2 *client credentials* + Transaction Search API).
+   - `MockPayPalClient`: realistic, deterministic sample data, so the project can be used and tested **without PayPal credentials**.
+2. **Classifies** each movement with AI (`paypal/classifier.py`), also behind an interface:
+   - `LLMTransactionClassifier`: real, against any **OpenAI-compatible** API (OpenAI, Azure OpenAI, OpenRouter, Groq, a self-hosted server...). Returns category, confidence, an indicative Renta Web box and a **plain-language explanation** of the approximate tax treatment.
+   - `HeuristicTransactionClassifier`: simple rules (keywords, transaction type, recurrence detection by repeated amount + counterparty) that need no API key — it is the **automatic fallback** if the LLM fails and the base for the tests.
+3. Generates `tabla_paypal_irpf_<year>.csv` (per-transaction detail), `extras/paypal_resumen_natural.txt` (prose summary with the disclaimer that this is automatic guidance, not binding tax advice) and `extras/paypal_informe.html` (self-contained report to open in the browser: KPIs, filterable table, explanations and downloads; no server or extra dependencies).
 
-Tanto el modo PayPal como el clasificador eligen automáticamente real vs. mock/heurístico según variables de entorno (ver más abajo), con **fallback seguro a mock/heurístico** si faltan credenciales — así la demo nunca se rompe.
+Both the PayPal mode and the classifier choose real vs. mock/heuristic automatically from environment variables (see below), with a **safe fallback to mock/heuristic** if credentials are missing — so the demo never breaks.
 
-Qué es nuevo frente al estado previo del repo (solo IBKR): todo el paquete `paypal/`, el script `process_paypal.py`, sus tests (`tests/test_paypal_*.py`, `tests/test_process_paypal.py`) y esta sección del README.
+What is new compared with the previous state of the repo (IBKR only): the whole `paypal/` package, `process_paypal.py`, its tests (`tests/test_paypal_*.py`, `tests/test_process_paypal.py`) and this README section.
 
-## Qué hace y qué no (por ahora)
+## What it does and does not do (for now)
 
-**Sí:**
-- Ganancia/pérdida por **compraventa de acciones** cerrada en el ejercicio (largo y corto), FIFO.
-- **Opciones**: cierre antes de vencimiento, vencimiento sin ejercer, y **ejercicio/asignación** — en este último caso traslada la prima al valor de transmisión/adquisición de la **acción** (criterio DGT), salvo en opciones sobre **índices**, que liquidan en efectivo y tributan siempre aparte.
-- **Regla de los 2 meses** (art. 33.5.f LIRPF): tabla con las pérdidas de acciones que **sí** puedes computar este ejercicio (sin recompra homogénea en ±2 meses); si una venta con pérdida no sale en esa tabla es porque todavía no es deducible.
+**Yes:**
+- Gain/loss from **stock trades** closed in the tax year (long and short), FIFO.
+- **Options**: closing before expiry, expiry without exercise, and **exercise/assignment** — in the latter case the premium is transferred to the **stock**'s transfer/acquisition value (DGT criterion), except for **index** options, which settle in cash and are always taxed separately.
+- **Two-month rule** (art. 33.5.f LIRPF): table with the stock losses you **can** offset this year (no homogeneous repurchase within ±2 months); if a loss sale does not appear in that table, it is because it is not yet deductible.
 
-**No:** dividendos (se llevan aparte, a propósito), intereses, cambio de divisa (`CASH`/`EUR.USD`), posiciones abiertas a 31/12, futuros, fondos/IIC.
+**No:** dividends (handled separately, on purpose), interest, currency conversion (`CASH`/`EUR.USD`), open positions at 31/12, futures, funds/UCITS.
 
-> La fila **TOTAL** de cada CSV **no tiene por qué coincidir** con «P&G realizadas» de IBKR (esa suele incluir dividendos, otros cambios de divisa, etc.). Para Hacienda usa estas tablas; IBKR solo para comprobar que no falten operaciones.
+> The **TOTAL** row of each CSV **does not have to match** IBKR's "realized P&L" (that usually includes dividends, other currency conversions, etc.). Use these tables for the tax return; use IBKR only to check that no trades are missing.
 
-Detalle y grado de certeza normativa por caso: [docs/CONFORMIDAD_NORMATIVA.md](docs/CONFORMIDAD_NORMATIVA.md)
+Normative detail and degree of certainty per case: [docs/CONFORMIDAD_NORMATIVA_EN.md](docs/CONFORMIDAD_NORMATIVA_EN.md)
 
-## Uso rápido
+## Quick start
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Interactive Brokers: exports Flex Query en inputs/OPERACIONES*.csv
-python process_data.py --ejercicio 2026
+# Interactive Brokers: Flex Query exports in inputs/OPERACIONES*.csv
+python process_data.py --year 2026
 
-# PayPal: funciona sin configurar nada (modo mock + clasificador heurístico)
-python process_paypal.py --ejercicio 2026
+# PayPal: works without any configuration (mock mode + heuristic classifier)
+python process_paypal.py --year 2026
 ```
 
-`--actualizar-bce` vuelve a descargar los tipos del BCE (ambos scripts).
+`--update-ecb` re-downloads the ECB rates (both scripts).
 
-Al terminar, `process_paypal.py` abre `extras/paypal_informe.html` en Chromium (o en el navegador por defecto). Si Chromium está instalado como snap (habitual en Ubuntu), el informe y sus descargas se copian a `~/irpf-paypal/` para que el navegador pueda leerlos. Usa `--no-abrir-informe` si no quieres que se abra.
+When it finishes, `process_paypal.py` opens `extras/paypal_informe.html` in Chromium (or the default browser). If Chromium is installed as a snap (common on Ubuntu), the report and its downloads are copied to `~/irpf-paypal/` so the browser can read them. Use `--no-open-report` if you do not want it to open.
 
-Si declaras opciones de IBKR, mira antes [docs/TUTORIAL_EXPORT_IBKR.md](docs/TUTORIAL_EXPORT_IBKR.md): la Flex Query necesita columnas extra (`UnderlyingSymbol`, `Strike`, `Expiry`, `Put/Call`, `Multiplier`, `Notes/Codes`) que no hacen falta si solo declaras acciones.
+If you file IBKR options, read [docs/TUTORIAL_EXPORT_IBKR_EN.md](docs/TUTORIAL_EXPORT_IBKR_EN.md) first: the Flex Query needs extra columns (`UnderlyingSymbol`, `Strike`, `Expiry`, `Put/Call`, `Multiplier`, `Notes/Codes`) that are not needed if you only file stocks.
 
-### PayPal: modo mock vs. modo real
+### PayPal: mock vs. real mode
 
-Por defecto, `process_paypal.py` funciona **sin ninguna credencial**: usa datos de ejemplo (`MockPayPalClient`) y un clasificador heurístico (`HeuristicTransactionClassifier`). Para activar los modos reales, copia `.env.example` a `.env` (se carga automáticamente si tienes `python-dotenv` instalado) o exporta las variables a mano:
+By default, `process_paypal.py` works **without any credentials**: it uses sample data (`MockPayPalClient`) and a heuristic classifier (`HeuristicTransactionClassifier`). To enable real modes, copy `.env.example` to `.env` (loaded automatically if you have `python-dotenv` installed) or export the variables manually:
 
-| Variable | Para qué sirve | Por defecto |
+| Variable | What it is for | Default |
 |---|---|---|
-| `PAYPAL_MODE` | `mock` (datos de ejemplo) o `real` (sandbox de PayPal) | `mock` |
-| `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` | Credenciales de tu app en [developer.paypal.com](https://developer.paypal.com/dashboard/) (solo si `PAYPAL_MODE=real`) | — |
-| `PAYPAL_ENV` | `sandbox` o `live` (solo si `PAYPAL_MODE=real`) | `sandbox` |
-| `CLASSIFIER_MODE` | `heuristic` (reglas, sin IA externa) o `llm` (clasificación real con IA) | `heuristic` |
-| `OPENAI_API_KEY` / `LITELLM_API_KEY` | API key del proveedor LLM (basta una de las dos; solo si `CLASSIFIER_MODE=llm`) | — |
-| `OPENAI_BASE_URL` / `LITELLM_BASE_URL` | Endpoint compatible con OpenAI. `LITELLM_BASE_URL` añade `/v1` si falta | API pública de OpenAI |
-| `OPENAI_MODEL` / `LLM_MODEL` | Modelo a usar | `gpt-4o-mini` |
+| `PAYPAL_MODE` | `mock` (sample data) or `real` (PayPal sandbox) | `mock` |
+| `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` | Credentials of your app at [developer.paypal.com](https://developer.paypal.com/dashboard/) (only if `PAYPAL_MODE=real`) | — |
+| `PAYPAL_ENV` | `sandbox` or `live` (only if `PAYPAL_MODE=real`) | `sandbox` |
+| `CLASSIFIER_MODE` | `heuristic` (rules, no external AI) or `llm` (real AI classification) | `heuristic` |
+| `OPENAI_API_KEY` / `LITELLM_API_KEY` | LLM provider API key (one of the two is enough; only if `CLASSIFIER_MODE=llm`) | — |
+| `OPENAI_BASE_URL` / `LITELLM_BASE_URL` | OpenAI-compatible endpoint. `LITELLM_BASE_URL` adds `/v1` if missing | OpenAI public API |
+| `OPENAI_MODEL` / `LLM_MODEL` | Model to use | `gpt-4o-mini` |
 
 ```bash
-# Ejemplo con todo en real (necesita credenciales de PayPal sandbox y una API key de LLM)
+# Example with everything in real mode (needs PayPal sandbox credentials and an LLM API key)
 PAYPAL_MODE=real PAYPAL_CLIENT_ID=... PAYPAL_CLIENT_SECRET=... \
 CLASSIFIER_MODE=llm OPENAI_API_KEY=sk-... \
-python process_paypal.py --ejercicio 2026
+python process_paypal.py --year 2026
 ```
 
-Si pides modo real pero faltan credenciales, el script **no falla**: avisa por consola y sigue en modo mock/heurístico.
+If you request real mode but credentials are missing, the script **does not fail**: it warns on the console and continues in mock/heuristic mode.
 
-> **Si el sandbox real falla por red/DNS**, no hace falta arreglarlo para la demo: usa `PAYPAL_MODE=mock` (24 movimientos de ejemplo) y, si quieres, `CLASSIFIER_MODE=llm`. El fallback automático a mock/heurístico solo cubre credenciales ausentes; un fallo de red en modo real sí corta la ejecución, así que para grabar usa el mock.
+> **If the real sandbox fails due to network/DNS**, you do not need to fix it for the demo: use `PAYPAL_MODE=mock` (24 sample movements) and, optionally, `CLASSIFIER_MODE=llm`. The automatic mock/heuristic fallback only covers missing credentials; a network failure in real mode stops the run, so record with the mock.
 
-El clasificador acepta también un **proxy LiteLLM local** (Ollama/vLLM/llama.cpp) sin API key de pago: define `LITELLM_API_KEY` y `LITELLM_BASE_URL` (el código añade `/v1` si falta) junto con `LLM_MODEL`. Si el modelo local no soporta `response_format=json_object`, se reintenta sin ese parámetro y se toleran bloques ```` ```json ````; si aun así no devuelve JSON válido, cada transacción cae a la heurística.
+The classifier also accepts a **local LiteLLM proxy** (Ollama/vLLM/llama.cpp) without a paid API key: set `LITELLM_API_KEY` and `LITELLM_BASE_URL` (the code appends `/v1` if missing) together with `LLM_MODEL`. If the local model does not support `response_format=json_object`, it retries without that parameter and tolerates ```` ```json ```` blocks; if it still does not return valid JSON, each transaction falls back to the heuristic classifier.
 
-## Entrada y salida
+## Input and output
 
 ### Interactive Brokers
 
 | | |
 |---|---|
-| **Entrada** | `inputs/OPERACIONES*.csv` (uno o varios años: hace falta historial de compras para FIFO; las tablas solo declaran cierres del ejercicio) |
-| **Acciones** | `tabla_definitiva_irpf_AAAA.csv` — una fila por empresa; TOTAL = suma de «Ganancia / pérdida neta €» |
-| **Opciones** | `tabla_opciones_irpf_AAAA.csv` — una fila por contrato cerrado/vencido (las ejercidas/asignadas sobre acciones van dentro de la tabla de acciones, no aquí) |
-| **Minusvalías computables** | `tabla_minusvalias_computables_irpf_AAAA.csv` — solo pérdidas de acciones deducibles ya este ejercicio (regla de los 2 meses) |
-| **Extras** | `extras/` — FIFO, tipos BCE, posiciones abiertas, cruces opción↔acción y análisis completo de la regla de los 2 meses (incluidas las bloqueadas) |
-| **Caché** | `cache/` — tipos BCE descargados |
-| **Ejemplos sintéticos** | `inputs/ejemplos/` (CSV de ejemplo) e `inputs/ejemplos/informes/` (salidas ya generadas con datos inventados, 2025 y 2026) |
+| **Input** | `inputs/OPERACIONES*.csv` (one or more years: purchase history is needed for FIFO; the tables only declare sales closed in the tax year) |
+| **Stocks** | `tabla_definitiva_irpf_AAAA.csv` — one row per company; TOTAL = sum of "Net gain / loss €" |
+| **Options** | `tabla_opciones_irpf_AAAA.csv` — one row per closed/expired contract (exercised/assigned stock options go inside the stock table, not here) |
+| **Deductible losses** | `tabla_minusvalias_computables_irpf_AAAA.csv` — only stock losses deductible this year (two-month rule) |
+| **Extras** | `extras/` — FIFO, ECB rates, open positions, option↔stock crossings and the full two-month rule analysis (including blocked losses) |
+| **Cache** | `cache/` — downloaded ECB rates |
+| **Synthetic examples** | [inputs/ejemplos/](inputs/ejemplos/README_EN.md) (sample CSVs) and [inputs/ejemplos/informes/](inputs/ejemplos/informes/README_EN.md) (already generated outputs with invented data, 2025 and 2026) |
 
 ### PayPal
 
 | | |
 |---|---|
-| **Entrada** | Transacciones del rango de fechas indicado (`--fecha-inicio`/`--fecha-fin`, por defecto el año natural de `--ejercicio`), obtenidas del cliente real o mock — no hace falta ningún CSV |
-| **Salida** | `tabla_paypal_irpf_AAAA.csv` — una fila por transacción: categoría fiscal, confianza de la IA, importe convertido a EUR con tipos BCE, casilla orientativa y explicación en lenguaje natural |
-| **Extras** | `extras/paypal_resumen_por_categoria.csv` (totales agregados), `extras/paypal_resumen_natural.txt` (resumen en prosa + listado de movimientos a revisar manualmente) y `extras/paypal_informe.html` (informe visual autocontenido, listo para el navegador o para guardar como PDF) |
+| **Input** | Transactions in the given date range (`--start-date`/`--end-date`, defaulting to the calendar year of `--year`), obtained from the real or mock client — no CSV needed |
+| **Output** | `tabla_paypal_irpf_AAAA.csv` — one row per transaction: tax category, AI confidence, amount converted to EUR with ECB rates, indicative box and plain-language explanation |
+| **Extras** | `extras/paypal_resumen_por_categoria.csv` (aggregated totals), `extras/paypal_resumen_natural.txt` (prose summary + list of movements to review manually) and `extras/paypal_informe.html` (self-contained visual report, ready for the browser or to save as PDF) |
 
 ## Renta Web
 
-**Acciones (0327/0328/0331):** una entidad emisora por fila de la tabla; 0328/0331 ya incluyen el ajuste por primas de opciones ejercidas/asignadas cuando aplica. Si el aviso de validación señala una empresa con pérdidas mezcladas (computable + bloqueada por la regla de los 2 meses), consulta `extras/perdidas_analisis_regla_2_meses.csv` y declárala en dos entradas separadas si Renta Web lo exige.
+**Stocks (0327/0328/0331):** one issuer per table row; 0328/0331 already include the adjustment for exercised/assigned option premiums where applicable. If the validation warning points to a company with mixed losses (deductible + blocked by the two-month rule), check `extras/perdidas_analisis_regla_2_meses.csv` and declare it in two separate entries if Renta Web requires it.
 
-**Opciones:** no son 0327/0328/0331 — son ganancia/pérdida que no deriva de transmisión de elementos patrimoniales (art. 37.1.m LIRPF); van en el apartado de futuros/opciones u otros elementos patrimoniales de la base del ahorro (la casilla exacta varía cada año). Una fila marcada «EJERCIDA/ASIGNADA sin cruce automático» no debería declararse ahí, sino sumarse a mano a 0328/0331 de la acción — revisa `extras/opciones_ejercicios_asignaciones.csv`.
+**Options:** they are not 0327/0328/0331 — they are gain/loss that does not derive from the transfer of assets (art. 37.1.m LIRPF); they go in the futures/options or other assets section of the savings tax base (the exact box changes every year). A row marked "EXERCISED/ASSIGNED without automatic crossing" should not be declared there, but added manually to the stock's 0328/0331 — check `extras/opciones_ejercicios_asignaciones.csv`.
 
-**PayPal:** la clasificación (venta ocasional / ingreso recurrente / reembolso / cambio de divisa / comisión) y la casilla orientativa son una **ayuda automática, no asesoramiento fiscal vinculante** — tanto si viene del LLM como de las reglas heurísticas. Revisa siempre las filas marcadas «Revisar manualmente» (importe elevado, recurrencia sospechosa de actividad económica no declarada, o movimientos que no encajan en ninguna categoría) antes de trasladarlas a Renta Web, y ante dudas reales consulta con un asesor fiscal.
+**PayPal:** the classification (occasional sale / recurring income / refund / currency conversion / fee) and the indicative box are **automatic guidance, not binding tax advice** — whether it comes from the LLM or the heuristic rules. Always review the rows marked "Review manually" (high amount, recurrence suggesting undeclared economic activity, or movements that do not fit any category) before moving them to Renta Web, and for real doubts consult a tax adviser.
 
 ## Excel
 
-CSV con `;` y decimales con **punto**. Si `SUMA()` da 0, importa con *Datos → Desde texto/CSV* (UTF-8) o usa la fila TOTAL.
+CSV with `;` and **dot** decimals. If `SUMA()` returns 0, import with *Data → From text/CSV* (UTF-8) or use the TOTAL row.
 
 ## Tests
 
@@ -125,16 +126,16 @@ pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
-Todos los tests (31) cubren el módulo PayPal — cliente, clasificador y pipeline — y se ejecutan **sin red ni credenciales** (modo mock + heurístico); el único acceso de red real durante los tests es la descarga/caché de tipos del BCE, ya existente para IBKR.
+All tests (31) cover the PayPal module — client, classifier and pipeline — and run **without network or credentials** (mock + heuristic mode); the only real network access during tests is the pre-existing ECB rate cache download.
 
-## Más información
+## More information
 
-- [docs/TUTORIAL_EXPORT_IBKR.md](docs/TUTORIAL_EXPORT_IBKR.md) — Flex Query (acciones y opciones) + ejemplos en `inputs/ejemplos/`
-- [docs/CONFORMIDAD_NORMATIVA.md](docs/CONFORMIDAD_NORMATIVA.md) — normativa, cortos, opciones (acciones e índices), regla de los 2 meses
-- [.env.example](.env.example) — variables de entorno del módulo PayPal, documentadas
+- [docs/TUTORIAL_EXPORT_IBKR_EN.md](docs/TUTORIAL_EXPORT_IBKR_EN.md) — Flex Query (stocks and options) + examples in `inputs/ejemplos/`
+- [docs/CONFORMIDAD_NORMATIVA_EN.md](docs/CONFORMIDAD_NORMATIVA_EN.md) — regulations, shorts, options (stocks and indices), two-month rule
+- [.env.example](.env.example) — documented PayPal module environment variables
 - [LICENSE](LICENSE) — MIT
 
 ## TODO
 
-- Futuros (distintos de opciones) en Interactive Brokers.
-- PayPal: paginación/caché local de transacciones reales para cuentas con mucho volumen; soporte de más tipos de evento de PayPal (actualmente se infieren por texto/código, no hay un mapeo exhaustivo de todos los `transaction_event_code`).
+- Futures (other than options) in Interactive Brokers.
+- PayPal: local pagination/cache for real transactions in high-volume accounts; support for more PayPal event types (currently inferred from text/code; there is no exhaustive mapping of every `transaction_event_code`).

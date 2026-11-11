@@ -1,3 +1,5 @@
+> **English version:** [README_EN.md](README_EN.md)
+
 # CSV de ejemplo
 
 **NVIDIA** (`NVDA`) en **USD** (FIFO + BCE); ficticios `CORTO` (EUR) y `USDX` (USD). No se leen solos: el script usa `inputs/OPERACIONES*.csv`.

@@ -1,3 +1,5 @@
+> **English version:** [README_EN.md](README_EN.md)
+
 # Informes de ejemplo (IBKR) — datos 100 % inventados
 
 Estos CSV/TXT son la salida de `process_data.py` usando **solo** los CSV de
