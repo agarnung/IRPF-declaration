@@ -123,9 +123,7 @@ CSV con `;` y decimales con **punto**. Si `SUMA()` da 0, importa con *Datos → 
 
 ## Vídeo demo
 
-El vídeo (2:55) tiene narración y subtítulos en inglés. Subtítulos:
-[video/subtitles.srt](video/subtitles.srt); capítulos en
-[video/chapters.txt](video/chapters.txt).
+El vídeo (2:55) tiene narración y subtítulos en inglés. Vídeo: https://www.youtube.com/watch?v=VdFLO-PU66Q — subtítulos: [video/subtitles.srt](video/subtitles.srt); capítulos: [video/chapters.txt](video/chapters.txt).
 
 ## Tests
 

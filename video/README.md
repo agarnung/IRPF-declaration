@@ -1,6 +1,6 @@
 # Demo video
 
-- YouTube: `<youtube-url>` (public)
+- YouTube: https://www.youtube.com/watch?v=VdFLO-PU66Q (public)
 - English subtitles: [subtitles.srt](subtitles.srt)
 - Chapters: [chapters.txt](chapters.txt)
 

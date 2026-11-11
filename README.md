@@ -122,9 +122,7 @@ CSV with `;` and **dot** decimals. If `SUMA()` returns 0, import with *Data → 
 
 ## Demo video
 
-The 2:55 demo has English narration and English subtitles. The subtitle file is
-[video/subtitles.srt](video/subtitles.srt); chapters are in
-[video/chapters.txt](video/chapters.txt).
+The 2:55 demo has English narration and English subtitles. Video: https://www.youtube.com/watch?v=VdFLO-PU66Q — subtitles: [video/subtitles.srt](video/subtitles.srt); chapters: [video/chapters.txt](video/chapters.txt).
 
 ## Tests
 
