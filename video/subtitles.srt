@@ -1,0 +1,175 @@
+1
+00:00:00,000 --> 00:00:05,423
+Every year, freelancers and occasional sellers have to declare the money they
+
+2
+00:00:05,423 --> 00:00:07,042
+receive through PayPal.
+
+3
+00:00:07,042 --> 00:00:12,606
+This tool reads that history and explains, in plain language, what belongs in a
+
+4
+00:00:12,606 --> 00:00:13,944
+Spanish tax return.
+
+5
+00:00:13,944 --> 00:00:16,103
+PayPal statements are messy.
+
+6
+00:00:16,103 --> 00:00:22,580
+They mix occasional sales, recurring income, refunds, currency conversions and fees.
+
+7
+00:00:22,580 --> 00:00:28,748
+Classifying every movement by hand is slow, and one mistake can cost you time or
+
+8
+00:00:28,748 --> 00:00:29,211
+money.
+
+9
+00:00:29,211 --> 00:00:35,380
+This is exactly the kind of repetitive work that a small AI assistant can do for
+
+10
+00:00:35,380 --> 00:00:35,688
+you.
+
+11
+00:00:35,688 --> 00:00:40,915
+The tool uses the PayPal Transaction Search API to import your movements.
+
+12
+00:00:40,915 --> 00:00:46,787
+An AI classifier assigns each one a fiscal category, and the European Central Bank
+
+13
+00:00:46,787 --> 00:00:49,222
+rates convert everything to euros.
+
+14
+00:00:49,222 --> 00:00:55,022
+The output is a detailed CSV plus a plain-language summary that tells you what to
+
+15
+00:00:55,022 --> 00:00:57,600
+declare and what to review manually.
+
+16
+00:00:57,600 --> 00:01:00,651
+Here is the full pipeline in mock mode.
+
+17
+00:01:00,651 --> 00:01:07,144
+Twenty-four sample transactions go in: occasional sales, recurring income, refunds,
+
+18
+00:01:07,144 --> 00:01:11,603
+currency conversions, fees and a few ambiguous movements.
+
+19
+00:01:11,603 --> 00:01:17,861
+The tool classifies them, converts the amounts to euros, and flags the ambiguous
+
+20
+00:01:17,861 --> 00:01:20,052
+movements for manual review.
+
+21
+00:01:20,052 --> 00:01:26,232
+It also writes the CSV, the natural-language summary, and a visual HTML report.
+
+22
+00:01:26,233 --> 00:01:31,521
+The whole flow is covered by thirty-one tests that run without network or
+
+23
+00:01:31,521 --> 00:01:32,390
+credentials.
+
+24
+00:01:32,390 --> 00:01:38,112
+The repository contains the PayPal client, the classifier, the pipeline and the
+
+25
+00:01:38,112 --> 00:01:39,126
+documentation.
+
+26
+00:01:39,126 --> 00:01:44,848
+Every real component has a safe fallback, so a missing key or a network failure
+
+27
+00:01:44,848 --> 00:01:46,441
+cannot break the demo.
+
+28
+00:01:46,441 --> 00:01:50,336
+The same command works against the PayPal sandbox.
+
+29
+00:01:50,336 --> 00:01:56,490
+Here it is with real sandbox credentials: OAuth authentication, the Transaction
+
+30
+00:01:56,490 --> 00:02:00,151
+Search API, and the same classification output.
+
+31
+00:02:00,151 --> 00:02:01,708
+No real money moves.
+
+32
+00:02:01,708 --> 00:02:07,706
+The sandbox lets you test the integration end to end before connecting a live
+
+33
+00:02:07,706 --> 00:02:08,329
+account.
+
+34
+00:02:08,341 --> 00:02:13,351
+The classifier can also run on a local large language model through an
+
+35
+00:02:13,351 --> 00:02:18,360
+OpenAI-compatible endpoint, so the demo does not depend on a paid API.
+
+36
+00:02:18,360 --> 00:02:24,371
+If the model is unavailable or returns an invalid answer, the tool falls back to the
+
+37
+00:02:24,371 --> 00:02:27,877
+heuristic classifier, transaction by transaction.
+
+38
+00:02:27,877 --> 00:02:33,243
+It is useful for freelancers, occasional sellers and anyone who receives money
+
+39
+00:02:33,243 --> 00:02:38,678
+through PayPal and wants a clear starting point before filing their Spanish tax
+
+40
+00:02:38,678 --> 00:02:39,159
+return.
+
+41
+00:02:39,159 --> 00:02:44,869
+It is not tax advice, but it turns a messy statement into a reviewable first draft.
+
+42
+00:02:44,877 --> 00:02:48,619
+The code is open source under the MIT license.
+
+43
+00:02:48,619 --> 00:02:50,571
+Link in the description.
+
+44
+00:02:50,571 --> 00:02:55,125
+Thanks for watching, and good luck with your tax return.

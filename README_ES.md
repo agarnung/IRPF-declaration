@@ -120,6 +120,13 @@ El clasificador acepta también un **proxy LiteLLM local** (Ollama/vLLM/llama.cp
 
 CSV con `;` y decimales con **punto**. Si `SUMA()` da 0, importa con *Datos → Desde texto/CSV* (UTF-8) o usa la fila TOTAL.
 
+
+## Vídeo demo
+
+El vídeo (2:55) tiene narración y subtítulos en inglés. Subtítulos:
+[video/subtitles.srt](video/subtitles.srt); capítulos en
+[video/chapters.txt](video/chapters.txt).
+
 ## Tests
 
 ```bash

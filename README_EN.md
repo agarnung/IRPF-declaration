@@ -119,6 +119,13 @@ The classifier also accepts a **local LiteLLM proxy** (Ollama/vLLM/llama.cpp) wi
 
 CSV with `;` and **dot** decimals. If `SUMA()` returns 0, import with *Data → From text/CSV* (UTF-8) or use the TOTAL row.
 
+
+## Demo video
+
+The 2:55 demo has English narration and English subtitles. The subtitle file is
+[video/subtitles.srt](video/subtitles.srt); chapters are in
+[video/chapters.txt](video/chapters.txt).
+
 ## Tests
 
 ```bash
